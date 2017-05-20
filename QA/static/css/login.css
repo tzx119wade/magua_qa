@@ -1,0 +1,57 @@
+body{
+  background-color: rgb(247, 250, 252);
+}
+.bg {
+    width: 500px;
+    height: 500px;
+    left: 50%;
+    top:50%;
+    transform: translate(-50%,-50%);
+    position: relative;
+}
+.ui.image.logo{
+  width: 200px;
+  position: relative;
+  left: 50%;
+  transform: translate(-50%,0%);
+}
+
+.ui.sub.red.header {
+  position: absolute;
+  transform: translate(-50%,0%);
+  left:50%;
+  margin-top: 8px;
+  font-size: 10px;
+}
+
+.ui.two.item.text.menu{
+  width: 150px;
+  position: relative;
+  left: 50%;
+  transform: translate(-50%,0%);
+  margin-top: 30px;
+}
+span{
+  font-size: 20px;
+}
+.ui.text.menu{
+  width: 300px;
+  position: relative;
+  left: 50%;
+  transform: translate(-50%,0%);
+  margin-left: 1px;
+}
+.ui.vertical.menu{
+
+  width: 300px;
+  position: relative;
+  left: 50%;
+  transform: translate(-50%,0%);
+}
+.ui.button{
+  width: 300px;
+  position: relative;
+  left: 50%;
+  transform: translate(-50%,0%);
+  margin-top: 30px;
+}

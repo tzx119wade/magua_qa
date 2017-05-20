@@ -1,0 +1,211 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="{% static 'css/semantic.css' %}">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <script src="{% static 'js/vue1.js' %}"></script>
+    <script src="{% static 'js/js.cookie.js' %}"></script>
+    <script src="{% static 'js/reqwest.js' %}"></script>
+    <title>登录</title>
+  </head>
+  {% verbatim %}
+  <body id="app">
+
+    <div class="bg">
+      <div class="ui image logo">
+        <img src="http://127.0.0.1:8000/static/images/bg-logo.png" alt="" />
+      </div>
+      <div class="ui  two item text  menu">
+          <a class="item" v-on:click="setRegister" v-bind:class="{ 'active':currentView=='register' }">
+          <span>
+            <template v-if="currentView == 'register'">
+              <p class="outset" style="border-bottom:2px solid #2185D0;">注册</p>
+            </template>
+
+            <template v-else>
+              <p class="outset" style="border-bottom:2px solid rgb(247, 250, 252);">注册</p>
+            </template>
+          </span>
+          </a>
+          <a class="item" v-on:click="setLogin" v-bind:class="{ 'active':currentView==='login'}">
+            <span>
+              <template v-if="currentView == 'login'">
+                <p class="outset" style="border-bottom:2px solid #2185D0;">登录</p>
+              </template>
+
+              <template v-else>
+                <p class="outset" style="border-bottom:2px solid rgb(247, 250, 252);">登录</p>
+              </template>
+            </span>
+          </a>
+
+      </div>
+
+      <!-- 动态组件 -->
+      <component :is='currentView'><component>
+    </div>
+
+
+    <!-- login template -->
+    <template id="login">
+      <div class="ui vertical menu">
+        <div class="item">
+            <div class="ui transparent input">
+              <input type="text" placeholder="用户名" value="" v-model="loginForm.username">
+            </div>
+        </div>
+        <div class="item">
+          <div class="ui transparent input">
+            <input type="password" placeholder="密码（不少于6位）" value="" v-model="loginForm.password">
+          </div>
+        </div>
+      </div>
+      <div class="ui blue button" v-on:click="login">登录</div>
+      <span style="margin-left:" class="ui sub red header">{{ loginForm.msg }}</span>
+      <div class="ui text menu">
+        <div class="meun">
+          <div class="ui checkbox">
+            <input type="checkbox" checked v-model="loginForm.remember">
+            <label>记住我</label>
+          </div>
+        </div>
+        <div class="right menu">
+          忘记密码？
+         </div>
+      </div>
+    </template>
+
+
+    <!-- register template -->
+    <template id="register">
+
+      <div class="ui vertical menu">
+        <div class="item">
+            <div class="ui transparent input">
+                <input type="email" placeholder="用户名" value="" v-model="registerForm.username">
+            </div>
+        </div>
+        <div class="item">
+            <div class="ui transparent input">
+              <input type="email" placeholder="邮箱" value="" v-model="registerForm.email">
+            </div>
+        </div>
+        <div class="item">
+          <div class="ui transparent input">
+            <input type="password" placeholder="密码（不少于6位）" value="" v-model="registerForm.password">
+          </div>
+        </div>
+      </div>
+
+      <div class="ui blue button" v-on:click='register'>
+      注册
+      </div>
+    </template>
+
+    <!-- vue 脚本 -->
+    <script>
+      Vue.component('login',{
+        template:'#login',
+        data : function(){
+          return {
+            loginForm : {
+              username : '',
+              password : '',
+              remember : '',
+              msg : '',
+            }
+          };
+        },
+        // 用于登录的组件
+        methods:{
+          login : function(){
+              var self = this;
+              reqwest({
+                url:'http://127.0.0.1:8000/api/login',
+                method : 'post',
+                type : 'json',
+                data : {
+                  username : self.loginForm.username,
+                  password : self.loginForm.password,
+                  remember : self.loginForm.remember,
+                },
+                headers :{'X-CSRFToken': Cookies.get('csrftoken')},
+                success : function(resp){
+                  console.log('登录成功');
+                  Cookies.set('token',resp.token)
+                  console.log('data is ',resp.data);
+                  window.location = 'http://127.0.0.1:8000/profile/';
+                },
+                error : function(errors){
+                  console.log('出现错误');
+                  if(errors.status == 400){
+                    console.log('400错误');
+                    self.loginForm.msg = '账号或密码至少6位，请重试';
+                  }else if (errors.status == 403) {
+                    console.log('403错误');
+                    self.loginForm.msg = '账号或密码错误，请重试';
+                  }
+                },
+              })
+          },
+        }
+      })
+
+      Vue.component('register',{
+        template:'#register',
+        data : function(){
+          return {
+            registerForm : {
+              username : '',
+              password : '',
+              email : '',
+            }
+          }
+        },
+        // 注册组件
+        methods : {
+          register : function(){
+            var self = this;
+            reqwest({
+                url : 'http://127.0.0.1:8000/api/register',
+                method : 'post',
+                type : 'json',
+                data : {
+                  username : self.registerForm.username,
+                  password : self.registerForm.password,
+                  email : self.registerForm.email,
+                },
+                headers :{'X-CSRFToken': Cookies.get('csrftoken')},
+                success : function(resp){
+                  Cookies.set('token',resp.token);
+                  window.location = 'http://127.0.0.1:8000/profile/'
+                },
+                error : function(errors){
+                  console.log(errors);
+                },
+            });
+          },
+        },
+      })
+
+      var app = new Vue({
+        el:'#app',
+        data : {
+          currentView : 'login',
+        },
+        methods: {
+          setLogin:function(){
+            this.currentView = 'login'
+          },
+          setRegister:function(){
+            this.currentView = 'register'
+          },
+        },
+      })
+
+    </script>
+  </body>
+  {% endverbatim %}
+</html>

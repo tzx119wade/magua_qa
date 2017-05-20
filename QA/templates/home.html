@@ -1,0 +1,484 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>麻瓜问答主页</title>
+        <link rel="stylesheet" href="{% static 'css/semantic.css' %}" media="screen" title="no title" charset="utf-8">
+        <link rel="stylesheet" href="{% static 'css/home.css' %}" media="screen" title="no title" charset="utf-8">
+        <link rel="stylesheet" href="{% static 'css/dialog.css' %}" media="screen" title="no title" charset="utf-8">
+        <script src="{% static 'js/jquery.js' %}"></script>
+        <script src="{% static 'js/semantic.js' %}"></script>
+        <script src="{% static 'js/vue1.js' %}"></script>
+        <script src="{% static 'js/js.cookie.js' %}"></script>
+        <script src="{% static 'js/reqwest.js' %}"></script>
+    </head>
+    {% verbatim %}
+    <body id="app">
+        <!--菜单部分开始-->
+        <div class="ui inverted top fixed menu borderless blue menu">
+            <div class="header item" style="padding-left:0px;">
+                <div class="ui image logo">
+                    <img src="http://127.0.0.1:8000/static/images/logo.png" alt="" />
+                </div>
+            </div>
+            <div class="item">
+                <div class="ui icon input" style="width:240px;">
+                    <input type="textarea" placeholder="搜索你感兴趣的内容...">
+                    <i class="search link icon"></i>
+                </div>
+            </div>
+
+            <div class="ui secondary menu">
+                <a class="item" style="width:78px;">
+                    <span onclick="$('.first.coupled.modal').modal('show')">
+                        <div class="ui image">
+                            <img src="http://127.0.0.1:8000/static/images//question_icon.png" alt="" />
+                        </div>
+                        提问
+                    </span>
+                </a>
+
+                <a class="active item" style="width:78px;">
+                    <span>
+                        <div class="ui image">
+                            <img src="http://127.0.0.1:8000/static/images//answer_icon.png" alt="" />
+                        </div>
+                        回答
+                    </span>
+                </a>
+                <a class="item" style="width:78px;">
+                    <span>
+                        <div class="ui image">
+                            <img src="http://127.0.0.1:8000/static/images//read_icon.png" alt="" />
+                        </div>
+                        阅读
+                    </span>
+                </a>
+            </div>
+
+            <div class="right menu personal-detail">
+                <div class="active item" style="width:130px;">
+                <!--    <h5 class="ui inverted header">
+                        <div class="ui mini image">
+                            <img v-bind:src="userprofile.avatar" alt="">
+                        </div>
+                        <span>{{ userprofile.nickname }}</span>
+                    </h5>-->
+                    <img class="ui mini image" v-bind:src="userprofile.avatar" style="margin-right:6px">
+                    <h5 class="ui inverted header" style="margin-top:4px;">{{ userprofile.nickname | capitalize }}</h5>
+                </div>
+            </div>
+        </div>
+
+        <!--主体部分！！！频道推荐-->
+        <div class="ui vertical segment channel">
+            <span style="font-family: SourceHanSansSC;font-weight:bold;">频道</span>
+            <div class="ui divider 2" style="color: #cccccc;"></div>
+            <!-- 渲染频道数据 -->
+            <template v-for="item in channel_list">
+              <!-- 选中的样式 -->
+              <div class="row" style="margin-top:13px;margin-bottom:13px;" v-if="current_channel==item.channel.name" v-on:click="change_channel($index)">
+                  <div class="Rectangle-11">
+                      <div class="ui image">
+                          <img v-bind:src="item.channel.icon" alt="" />
+                      </div>
+                      <a class="channel-item" href="#">{{ item.channel.name }}</a>
+                  </div>
+              </div>
+
+              <!-- 未选中的样式 -->
+              <div class="row" v-on:click="change_channel($index)" style="margin-top:13px;margin-bottom:13px;" v-else>
+                  <div class="ui image">
+                      <img v-bind:src="item.channel.icon" alt="" />
+                  </div>
+                  <a class="channel-item" href="#">{{ item.channel.name }}</a>
+              </div>
+            </template>
+
+
+
+        </div>
+
+        <!--主体部分！！！内容开始-->
+        <div class="Rectangle answer">
+            <span style="font-family: SourceHanSansSC;font-weight:bold;">{{ current_channel }}</span>
+            <div class="ui divider 2" style="color: #cccccc;"></div>
+
+            <div class="ui items">
+              <!-- 信息框 -->
+              <template v-for="item in channel_list[index].items">
+                <!-- 如果是question的样式 -->
+                <template v-if="item.code == 2">
+                  <div class="item">
+                    <div class="ui small image" style="width:37px;height:37px;">
+                      <img v-bind:src="item.question.avatar">
+                    </div>
+                    <div class="content" style="display:inline-block;">
+                        <div class="header" style="font-size:15px;color:#225599;">{{ item.question.title }}</div>
+                        <div class="meta">
+                            <span style="font-weight:bold;">{{ item.question.nickname }},「{{ item.question.signature }}」</span>
+                            <span style="color:grey">问了一个问题</span>
+                        </div>
+                    </div>
+                  </div>
+                  <div class="ui divider"></div>
+                </template>
+                <!-- 如果是answer的样式 -->
+                <template v-else>
+                  <div class="item">
+                      <div class="ui small image" style="width:37px;height:37px;">
+                          <img  v-bind:src="item.answer.avatar">
+                          <div class="Rectangle-7">
+                              <span style="color: #698ebf;font-size:12px;font-weight: bold;">{{ item.answer.vote_count }}</span>
+                          </div>
+                      </div>
+                      <div class="content" style="display:inline-block;">
+                          <div class="header" style="font-size:15px;color:#225599;">{{ item.answer.question_title }}</div>
+                          <div class="meta">
+                              <span style="font-weight:bold;">{{ item.answer.nickname }}</span>
+                              <span style="color:grey;font-size:12px">{{ item.answer.signature }}</span>
+                          </div>
+
+                          <div class="description">
+                            <p style="font-size:13px;line-height:1.69;font-stretch: normal;" v-if="item.show_all == false">{{ item.answer.content | my-slice }}...  <a style="font-weight:bold;" v-on:click="show_all_or_not(item)">显示全部</a></p>
+                            <p style="font-size:13px;line-height:1.69;font-stretch: normal;" v-else>
+                              <template v-for="line in item.answer.content.split('\n')">
+                                {{ line }}<br>
+                              </template>
+
+                              <a style="font-weight:bold;" v-on:click="show_all_or_not(item)">收起^</a></p>
+                          </div>
+
+
+                          <div class="extra" style="position:relative;left:0px;">
+                              <i class="comment icon"></i>
+                              <span style="font-size:13px;">14条评论</span>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="ui divider"></div>
+                </template>
+
+              </template>
+            </div>
+            <!-- 加载更多 active-->
+            <div class="ui long button" v-on:click='load_next_page' v-if="channel_list[index].has_next">
+                <div class="header item">
+                    <a href="#">加载更多</a>
+                </div>
+            </div>
+              <!-- 加载更多 disable-->
+            <div class="ui long disabled button" v-else>
+                <div class="header item">
+                    <a href="#">没有更多了...</a>
+                </div>
+            </div>
+
+        </div>
+
+
+        <!--结束部分-->
+        <!-- fisrt modal-->
+        <div class="ui first coupled modal">
+            <!-- 页面标题栏 -->
+            <div class="ui secondary menu q_head">
+                <h3 class="header item">提问</h3>
+                <div class="right menu">
+                    <div class="item">
+                        <a onclick="$('.ui.modal').modal('hide')"><img src="http://127.0.0.1:8000/static/images/close_icon.png" alt="" /></a>
+                    </div>
+                </div>
+            </div>
+            <!-- <div class="ui secondary menu q_head">
+                <h3 class="header item">提问</h3>
+                <div class="right floated item">
+                    <a href="#"><img src="images/close_icon.png" alt="" /></a>
+                </div>
+            </div> -->
+
+            <div class="ui basic segment">
+                <div class="ui form q_content">
+                    <!-- 问题内容 -->
+                    <div class="ui fluid input">
+                        <input type="text" name="name" value="" placeholder="写下你的问题" v-model="question.title">
+                    </div>
+                    <!-- 问题说明 -->
+                    <div class="ui secondary menu q_desc">
+                        <label class="header item">
+                            问题说明：
+                        </label>
+                        <div class="right menu">
+                            <div class="ui image item" title="插入代码">
+                                <a href="#"><img src="http://127.0.0.1:8000/static/images/code_icon.png" alt="" /></a>
+                            </div>
+                            <div class="ui image item" title="插入图片">
+                                <a href="#"><img src="http://127.0.0.1:8000/static/images/img_icon.png" alt="" /></a>
+                            </div>
+                        </div>
+                    </div>
+                    <textarea name="name" rows="8" placeholder="问题背景、相关代码及截图等详细信息" v-model="question.info"></textarea>
+                    <div class="field">
+                        <label for="" style="margin-bottom:10px;margin-top: 10px;">问题相关的频道：</label>
+                        <!--<input type="text" name="name" value="" placeholder="话题之间空格隔开">-->
+                        <select class="ui compact selection dropdown" v-model="question.channel_name">
+                          <option>设计</option>
+                          <option>产品</option>
+                          <option>电影</option>
+                          <option selected="selected">前端</option>
+                        </select>
+                    </div>
+                    <!-- 是否发布动作 -->
+                    <div class="actions">
+                        <div class="ui right floated buttons">
+                            <div class="ui basic button item">
+                                取消
+                            </div>
+                            <div class="ui blue button item" v-on:click="post_new_question">
+                                发布
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- second modal -->
+        <div class="ui second coupled basic modal" style="width:554px;height:120px;">
+          <div class="ui error message" v-if="second_error_modal==true">
+            <i class="close icon" onclick="$('.second.modal').modal('hide')"></i>
+            <div class="header">
+              错误提示！
+            </div>
+            <ul class="list">
+              <template v-for="error in errors">
+                <li>{{ $key | capitalize }} : {{ error[0] | capitalize }}</li>
+              </template>
+            </ul>
+
+          </div>
+          <div class="ui icon message" v-else>
+            <i class="check circle outline icon"></i>
+            <div class="content">
+              <p>发布成功！</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 内部样式表 -->
+        <style media="screen">
+          .ui.divider:last-child {
+            display: none;
+          }
+        </style>
+
+        <!-- vue 脚本 -->
+        <script>
+          $('div.ui.items > .ui.divider:last-child').css('')
+          // dropdown
+          $('.ui.compact.selection.dropdown').dropdown();
+          // modal设置
+          $('.coupled.modal').modal({
+            allowMultiple:false
+          });
+          $('.second.modal').modal('attach events', '.first.modal .blue.button.item');
+          // 公用format
+          String.prototype.format = function () {
+            var i = 0, args = arguments;
+            return this.replace(/{}/g, function () {
+              return typeof args[i] != 'undefined' ? args[i++] : '';
+            });
+          };
+          // filter-字符串切片
+          Vue.filter('my-slice', function (value) {
+              return value.slice(0,200);
+          });
+
+          var app = new Vue({
+            el : '#app',
+            data : {
+              channel_list : [],
+              index : 1,
+              userprofile : '',
+              question : {
+                  title : '',
+                  info : '',
+                  channel_name : '',
+              },
+              second_error_modal : true,
+              errors : '',
+            },
+            // 计算属性
+            computed : {
+              current_channel : function(){
+                  return this.channel_list[this.index].channel.name;
+              },
+            },
+            // 方法
+            methods : {
+
+              // 点击频道的时候修改index的值，然后验证是否需要发起请求
+              change_channel : function(index){
+                this.index = index;
+                var channel = this.channel_list[index];
+                // 如果没有点击过，说明是首次点击，在这种情况下需要发起请求
+                if (channel.click == false){
+                  this.get_channel_answers(index)
+                }
+              },
+              // 显示全部或收起
+              show_all_or_not : function(item){
+                  item.show_all = !item.show_all;
+
+              },
+              // 获取频道列表
+              get_all_channel : function(){
+                var self = this;
+                reqwest({
+                  url : 'http://127.0.0.1:8000/api/channel',
+                  method : 'get',
+                  type : 'json',
+                  headers:Cookies.get('token')? {'Authorization': 'Token ' + Cookies.get('token')}:{},
+                  success : function(resp){
+                    for (var i=0;i<resp.length;i++){
+                        channel_object = {
+                            channel : resp[i],
+                            click : false,
+                            page_num : 1,
+                            items : [],
+                            has_next:true,
+                        }
+                        self.channel_list.push(channel_object);
+                    }
+                    console.log(self.channel_list);
+                    self.get_channel_answers(self.index);
+                  },
+                  error : function(){
+                    console.log('获取频道列表失败');
+                  }
+                })
+              },
+              // 返回格式化后的URL(公用方法)
+              url_format : function(index,num){
+                var url = '';
+                var channel = this.channel_list[index];
+                if (num == undefined) {
+                  url = 'http://127.0.0.1:8000/api/channel/{}/{}'.format(String(channel.channel.id), String(channel.page_num))
+                }else {
+                  url = 'http://127.0.0.1:8000/api/channel/{}/{}'.format(String(channel.channel.id), String(num))
+                }
+
+                return url;
+              },
+              // api/channel/id/page 接口
+              request_channel_page : function(url){
+                var self = this;
+                reqwest({
+                    url : url,
+                    method : 'get',
+                    type : 'json',
+                    headers:Cookies.get('token')? {'Authorization': 'Token ' + Cookies.get('token')}:{},
+                    success : function(resp){
+                      console.log('信息获取成功');
+                      // 判断data是question还是answer，分别进行处理
+                      for (var i = 0; i < resp.data.length; i++){
+                        if (resp.data[i].code == 2){
+                          self.channel_list[self.index].items.push(resp.data[i])
+                        }else if (resp.data[i].code == 1) {
+                          resp.data[i].show_all = false;
+                          self.channel_list[self.index].items.push(resp.data[i])
+                        }
+                      }
+
+                      self.channel_list[self.index].click = true;
+                      self.channel_list[self.index].page_num ++;
+                      // 判断还有没有一下页，以此来更新加载按钮的状态
+                      if (resp.has_next == 1){
+                        self.channel_list[self.index].has_next = true;
+                      }else if (resp.has_next == 0) {
+                        self.channel_list[self.index].has_next = false;
+                      }
+                      console.log(self.channel_list[self.index]);
+                    },
+                    error : function(){
+                      console.log('信息获取失败');
+                    }
+                  })
+              },
+              // 请求回答接口
+              get_channel_answers : function(index){
+                // 拼接请求URL
+                var url = this.url_format(index);
+                // 发起请求
+                this.request_channel_page(url);
+
+              },
+              // 加载更多
+              load_next_page : function(){
+                // 获取URL
+                var item = this.channel_list[this.index]
+                var url = this.url_format(this.index, item.page_num)
+                console.log(url);
+                // 发起请求
+                this.request_channel_page(url);
+
+              },
+
+              // userprofile
+              get_userprofile : function () {
+                var self = this;
+                reqwest({
+                  url : 'http://127.0.0.1:8000/api/userprofile',
+                  method : 'get',
+                  type : 'json',
+                  headers:Cookies.get('token')? {'Authorization': 'Token ' + Cookies.get('token')}:{},
+                  success : function (resp) {
+                      self.userprofile = resp;
+                      console.log('userprofile is ok');
+                  },
+                  error : function () {
+                      console.log('userprofile is wrong!');
+                  }
+                })
+              },
+              // post_new_question
+              post_new_question : function(){
+                this.second_modal_show = true;
+                var self = this;
+                reqwest({
+                  url : 'http://127.0.0.1:8000/api/addquestion',
+                  method : 'post',
+                  type : 'json',
+                  data : {
+                    title : self.question.title,
+                    info : self.question.info,
+                    channel_name : self.question.channel_name,
+                  },
+                  headers:Cookies.get('token')? {'Authorization': 'Token ' + Cookies.get('token')}:{},
+                  success : function(resp){
+                    console.log('问题提交成功');
+                    self.question.title = '';
+                    self.question.info = '';
+                    self.question.channel_name = '';
+                    self.second_error_modal = false;
+                  },
+                  error : function(error){
+                    self.second_error_modal = true;
+                    console.log('问题提交失败');
+                    self.errors = JSON.parse(error.response);
+                    console.log(self.errors);
+                  }
+                })
+              },
+            },
+            created : function(){
+                this.get_all_channel();
+                this.get_userprofile();
+            },
+
+          })
+        </script>
+    </body>
+    {% endverbatim %}
+</html>

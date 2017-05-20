@@ -1,0 +1,260 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+  <head>
+      <meta charset="utf-8">
+      <title>个人中心页</title>
+      <link rel="stylesheet" href="{% static 'css/semantic.css' %}" media="screen" title="no title">
+      <link rel="stylesheet" href="{% static 'css/profile.css' %}" media="screen" title="no title">
+      <script src="{% static 'js/vue1.js' %}"></script>
+      <script src="{% static 'js/js.cookie.js' %}"></script>
+      <script src="{% static 'js/reqwest.js' %}"></script>
+  </head>
+  {% verbatim %}
+  <body id='app'>
+    <div class="top nav">
+        <div class="ui fixed borderless menu">
+            <div class="logo item">
+                <img src="http://127.0.0.1:8000/static/images/logo.png" alt="" class="ui image" />
+            </div>
+            <div class="item">
+                <div class="ui icon input">
+                  <input class="prompt" placeholder="搜索您感兴趣的内容..." type="text">
+                  <i class="search icon"></i>
+                </div>
+            </div>
+            <a class="item">
+                <img src="http://127.0.0.1:8000/static/images/question_icon.png" alt="" class="ui image" />
+                <span class="nav text">提问</span>
+            </a>
+            <a class="item">
+                <img src="http://127.0.0.1:8000/static/images/read_icon.png" alt="" class="ui image" />
+                <span class="nav text">阅读</span>
+            </a>
+            <a class="item">
+                <img src="http://127.0.0.1:8000/static/images/answer_icon.png" alt="" class="ui image" />
+                <span class="nav text">回答</span>
+            </a>
+            <div class="right menu">
+                <a class="item">
+                    <img class="ui image" style="width:28px;height:28px" v-bind:src="userprofile.avatar"/>
+                    <span class="nav text" style="font-size:12px">{{ userprofile.nickname | capitalize }}</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="ui vertical segment">
+        <div class="ui container user segment">
+            <a href="#">
+                <div class="ui image">
+                    <img v-bind:src="userprofile.avatar" alt="" style="width:100px;height:100px"/>
+                </div>
+                <p class="user change">
+                    修改头像
+                </p>
+            </a>
+            <h3 class="ui header">{{ userprofile.nickname | capitalize }}</h3>
+            <a href="#">
+                <p class="subtitle" style="font-size:12px">{{ userprofile.signature }}</p>
+                <span class="ex change">修改</span>
+            </a>
+        </div>
+        <div class="ui container segment">
+            <div class="hd-head">
+                <div class="hd-title">
+                    <h4 class="hd-name">回答</h4>
+                    <span class="hd-num">{{ answerlist.length }}</span>
+                </div>
+            </div>
+            <template v-for="answer in answerlist">
+              <div class="hd-list">
+                  <div class="hd-item">
+                      <div class="hd-vote-num">
+                          {{ answer.vote_count }}
+                      </div>
+                      <div class="hd-vote-type">
+                          赞同
+                      </div>
+                  </div>
+                  <div class="hd-main">
+                      <h4 class="hd-question">
+                          <a href="#" class="question_link">
+                              {{ answer.belong_to.title }}
+                          </a>
+                      </h4>
+                      <p class="hd-item-text">
+                          {{ answer.content.slice(0,30) }}...
+                      </p>
+                  </div>
+              </div>
+            </template>
+
+            <!--<div class="hd-last-list">
+                <div class="hd-item">
+                    <div class="hd-vote-num">
+                        300
+                    </div>
+                    <div class="hd-vote-type">
+                        赞同
+                    </div>
+                </div>
+                <div class="hd-main">
+                    <h4 class="hd-question">
+                        <a href="#" class="question_link">
+                            你们是怎么学会正则表达式的？
+                        </a>
+                    </h4>
+                    <p class="hd-item-text">
+                        我简单回忆了一下，其实很简单，就是一点，所有正则表达式的需求，都应该经过自己思考完...
+                    </p>
+                </div>
+            </div>-->
+
+        </div>
+        <div class="ui container segment">
+            <div class="hd-head">
+                <div class="hd-title">
+                    <h4 class="hd-name">提问</h4>
+                    <span class="hd-num">{{ questionlist.length }}</span>
+                </div>
+            </div>
+            <template v-for="question in questionlist">
+              <div class="hd-list">
+                  <div class="hd-question-item">
+                      <div class="hd-question-vote-num">
+                          1491
+                      </div>
+                      <div class="hd-question-vote-type">
+                          浏览
+                      </div>
+                  </div>
+                  <div class="hd-main">
+                      <h4 class="hd-question">
+                          <a href="#" class="question_link">
+                              {{ question.title }}
+                          </a>
+                      </h4>
+                      <p class="hd-question-item-text">
+                          4个回答
+                      </p>
+                  </div>
+              </div>
+            </template>
+
+            <!--<div class="hd-last-list">
+                <div class="hd-question-item">
+                    <div class="hd-question-vote-num">
+                        11K
+                    </div>
+                    <div class="hd-question-vote-type">
+                        浏览
+                    </div>
+                </div>
+                <div class="hd-main">
+                    <h4 class="hd-question">
+                        <a href="#" class="question_link">
+                            你们是怎么学会正则表达式的？
+                        </a>
+                    </h4>
+                    <p class="hd-question-item-text">
+                        0个回答
+                    </p>
+                </div>
+            </div>-->
+        </div>
+    </div>
+    <div class="ui vertical center aligned segment">
+        <span class="ft-l">
+            <a href="#">Developed by Mugglecoding team xxx</a>
+        </span>
+        <span class="ft-m">
+            <a href="#">关于我们.加入我们.联系我们</a>
+        </span>
+        <span class="ft-r">
+            <a href="#">京ICP备15047012号-2</a>
+        </span>
+    </div>
+
+<!-- vue 脚本 -->
+  <script>
+    var app = new Vue({
+      el : '#app',
+      data : {
+        userprofile : {
+          avatar : '',
+          nickname : '',
+          signature : '',
+        },
+        questionlist:[],
+        answerlist:[],
+      },
+      methods : {
+        // 获取userprofile
+        get_userprofile: function(){
+          var token = Cookies.get('token')
+          console.log('token is ',token);
+          var self = this;
+          reqwest({
+              url : 'http://127.0.0.1:8000/api/userprofile',
+              method : 'get',
+              type : 'json',
+              headers:Cookies.get('token')? {'Authorization': 'Token ' + Cookies.get('token')}:{},
+              success : function(resp){
+                  console.log('请求成功');
+                  self.userprofile.avatar = resp.avatar;
+                  self.userprofile.nickname = resp.nickname;
+                  if(resp.signature == null){
+                    self.userprofile.signature = '赶快来补充你的个性签名吧'
+                  }else{
+                    self.userprofile.signature = resp.signature
+                  }
+              },
+              error : function(error){
+                console.log('请求失败');
+              },
+          })
+        },
+        // 获取问题列表
+        get_question_list : function(){
+          var self = this;
+          reqwest({
+              url:'http://127.0.0.1:8000/api/question',
+              method:'get',
+              type:'json',
+              headers:Cookies.get('token')? {'Authorization': 'Token ' + Cookies.get('token')}:{},
+              success:function(resp){
+                self.questionlist = resp.result
+              },
+              error : function(error){
+                console.log('请求问题列表失败');
+              }
+          })
+        },
+
+        // 获取answerlist
+        get_answer_list : function(){
+          var self = this;
+          reqwest({
+              url:'http://127.0.0.1:8000/api/answer',
+              method:'get',
+              type:'json',
+              headers:Cookies.get('token')? {'Authorization': 'Token ' + Cookies.get('token')}:{},
+              success:function(resp){
+                self.answerlist = resp;
+              },
+              error : function(error){
+                console.log('get answer list error');
+              }
+          })
+        },
+      },
+      created : function(){
+          this.get_userprofile();
+          this.get_question_list();
+          this.get_answer_list();
+      },
+    })
+  </script>
+  </body>
+  {% endverbatim %}
+</html>
