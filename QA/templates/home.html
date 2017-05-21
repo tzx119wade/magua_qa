@@ -180,7 +180,7 @@
 
         <!--结束部分-->
         <!-- fisrt modal-->
-        <div class="ui first coupled modal">
+        <div class="ui first coupled modal" style="height:520px;">
             <!-- 页面标题栏 -->
             <div class="ui secondary menu q_head">
                 <h3 class="header item">提问</h3>
@@ -190,13 +190,6 @@
                     </div>
                 </div>
             </div>
-            <!-- <div class="ui secondary menu q_head">
-                <h3 class="header item">提问</h3>
-                <div class="right floated item">
-                    <a href="#"><img src="images/close_icon.png" alt="" /></a>
-                </div>
-            </div> -->
-
             <div class="ui basic segment">
                 <div class="ui form q_content">
                     <!-- 问题内容 -->
@@ -228,6 +221,10 @@
                           <option selected="selected">前端</option>
                         </select>
                     </div>
+                    <div class="field">
+                        <label for="" style="margin-bottom:10px;margin-top: 10px;">添加话题：</label>
+                        <input type="text" name="name" value="" placeholder="话题之间空格隔开">
+                    </div>
                     <!-- 是否发布动作 -->
                     <div class="actions">
                         <div class="ui right floated buttons">
@@ -258,7 +255,7 @@
             </ul>
 
           </div>
-          <div class="ui icon message" v-else>
+          <div class="ui icon message" v-else transition='fade'>
             <i class="check circle outline icon"></i>
             <div class="content">
               <p>发布成功！</p>
@@ -275,7 +272,13 @@
 
         <!-- vue 脚本 -->
         <script>
-          $('div.ui.items > .ui.divider:last-child').css('')
+          Vue.transition('fade', {
+            afterEnter : function (el) {
+              setTimeout(function(){
+                $('.ui.second.modal').modal('hide');
+              },1000);
+            },
+          })
           // dropdown
           $('.ui.compact.selection.dropdown').dropdown();
           // modal设置
@@ -351,7 +354,6 @@
                         }
                         self.channel_list.push(channel_object);
                     }
-                    console.log(self.channel_list);
                     self.get_channel_answers(self.index);
                   },
                   error : function(){
@@ -457,7 +459,13 @@
                   },
                   headers:Cookies.get('token')? {'Authorization': 'Token ' + Cookies.get('token')}:{},
                   success : function(resp){
-                    console.log('问题提交成功');
+                    console.log('问题提交成功',resp);
+                    // 如果添加的问题所属的频道就是当前浏览的频道
+                    if (self.channel_list[self.index].channel.name == self.question.channel_name) {
+                        self.channel_list[self.index].items.unshift(resp);
+                      }
+
+                    // 清空、还原
                     self.question.title = '';
                     self.question.info = '';
                     self.question.channel_name = '';

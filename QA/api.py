@@ -214,10 +214,25 @@ def post_new_question(request):
             userprofile = request.user.UserProfile
             # 创建question对象
             question = Question.objects.create(title=title, info=info, channel=channel, publisher=userprofile)
-
-            result_serializer = QuestionSerializer(question, many=False)
-
-            return Response(result_serializer.data, status=status.HTTP_200_OK)
+            # 返回所创建的question对象
+            item = {
+                'code':2,
+                'question' : {
+                    'title' : question.title,
+                    'nickname' : question.publisher.nickname,
+                    'avatar' : question.publisher.avatar.url,
+                    'signature' : question.publisher.signature,
+                }
+            }
+            # json 编码
+            result_serializer = ChannelRestulSerializer(data=item)
+            if result_serializer.is_valid():
+                return Response(result_serializer.data, status=status.HTTP_200_OK)
+            else:
+                body = {
+                    'msg':'添加question的时候出现序列化错误',
+                }
+                return Response(body, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
     else:
