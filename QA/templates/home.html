@@ -362,13 +362,16 @@
                 })
               },
               // 返回格式化后的URL(公用方法)
-              url_format : function(index,num){
+              url_format : function(index){
                 var url = '';
                 var channel = this.channel_list[index];
-                if (num == undefined) {
-                  url = 'http://127.0.0.1:8000/api/channel/{}/{}'.format(String(channel.channel.id), String(channel.page_num))
+                if (channel.click == false) {
+                  url = 'http://127.0.0.1:8000/api/channel/{}/{}'.format(String(channel.channel.id), String(1))
                 }else {
-                  url = 'http://127.0.0.1:8000/api/channel/{}/{}'.format(String(channel.channel.id), String(num))
+                  count = this.channel_list[index].items.length;
+                  last_item = this.channel_list[index].items[count-1]
+                  q_id = last_item.q_id;
+                  url = 'http://127.0.0.1:8000/api/channel/{}/{}'.format(String(channel.channel.id), String(q_id))
                 }
 
                 return url;
@@ -419,8 +422,7 @@
               // 加载更多
               load_next_page : function(){
                 // 获取URL
-                var item = this.channel_list[this.index]
-                var url = this.url_format(this.index, item.page_num)
+                var url = this.url_format(this.index)
                 console.log(url);
                 // 发起请求
                 this.request_channel_page(url);

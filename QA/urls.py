@@ -19,7 +19,7 @@ urlpatterns = [
     url(r'^api/question', get_question),
     url(r'^api/answer', get_answer),
     url(r'^api/channel$',get_channel),
-    url(r'^api/channel/(?P<id>\d+)/(?P<page>\d+)',get_channel_answers),
+    url(r'^api/channel/(?P<id>\d+)/(?P<qid>\d+)',get_channel_answers),
     url(r'^api/addquestion',post_new_question),
 
 ]

@@ -49,3 +49,4 @@ class ChannelRestulSerializer(serializers.Serializer):
     code = serializers.IntegerField()
     answer = serializers.DictField(required=False)
     question = serializers.DictField(required=False)
+    q_id = serializers.IntegerField()

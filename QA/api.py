@@ -75,8 +75,6 @@ def register_site(request):
 @api_view(['GET'])
 @authentication_classes((TokenAuthentication,))
 def userprofile(request):
-    print ('request.auth is ',request.auth)
-    print ('reuqest.user is ',request.user)
 
     if request.auth :
         userprofile = request.user.UserProfile
@@ -134,16 +132,32 @@ def get_channel(request):
 # home-获取频道下的对应回答内容
 @api_view(['GET'])
 @authentication_classes((TokenAuthentication,))
-def get_channel_answers(request,id,page):
+def get_channel_answers(request,id,qid):
+
+    # 转格式
+    qid = int(qid)
 
     if request.auth:
         # 查询数据
         channel = Channel.objects.get(id=id)
         # 查询频道下的所有问题
-        quseryset = []
+        result_questions = []
         questions = list(channel.questions.all().order_by('-created_date'))
-        for question in questions:
-            # 构建answer类型的数据
+        # 通过查看ID来判断是属于首次请求，还是加载下一页
+        if qid != 1:
+            # 说明是在请求加载下一页
+            # 找到对应ID的question，并且构造一个新的数组，数组的第一位就是这个ID所代表的question
+            for question in questions:
+                if question.id == qid:
+                    index = questions.index(question)
+                    result_questions = questions[index+1 : ]
+        else:
+            # 说明是第一次请求
+            result_questions = questions
+
+        queryset = []
+        for question in result_questions:
+        # 构建answer类型的数据
             if question.answers.count() > 0:
                 answer_list = sorted(question.answers.all(), key=lambda x : x.vote_count, reverse=True)
                 item = {
@@ -155,32 +169,28 @@ def get_channel_answers(request,id,page):
                         'signature':answer_list[0].publisher.signature,
                         'vote_count':answer_list[0].vote_count,
                         'content':answer_list[0].content,
-                    }
+                        },
+                    'q_id' : question.id,
                 }
-                quseryset.append(item)
+                queryset.append(item)
             else:
                 # 构建question类型的数据
                 item = {
-                    'code' : 2,
-                    'question' : {
-                        'title':question.title,
-                        'nickname' : question.publisher.nickname,
-                        'avatar' : question.publisher.avatar.url,
-                        'signature' : question.publisher.signature,
-                    }
+                        'code' : 2,
+                        'question' : {
+                            'title':question.title,
+                            'nickname' : question.publisher.nickname,
+                            'avatar' : question.publisher.avatar.url,
+                            'signature' : question.publisher.signature,
+                            },
+                        'q_id' : question.id,
                 }
-                quseryset.append(item)
+                queryset.append(item)
 
         # 构造分页器
-        page_robot = Paginator(quseryset,3)
-        # 首先判断对应的页码是否有效
-        try:
-            page_data = page_robot.page(page)
-        except EmptyPage:
-            # 接口防御，防止调用接口的时候传入不合法的页码
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        # 如果页码有效
-        has_next = 0
+        page_robot = Paginator(queryset,3)
+        page_data = page_robot.page(1)
+        # 判断还有没有下一页
         if page_data.has_next():
             has_next = 1
         else :
@@ -222,7 +232,8 @@ def post_new_question(request):
                     'nickname' : question.publisher.nickname,
                     'avatar' : question.publisher.avatar.url,
                     'signature' : question.publisher.signature,
-                }
+                },
+                'q_id' : question.id,
             }
             # json 编码
             result_serializer = ChannelRestulSerializer(data=item)
@@ -231,6 +242,7 @@ def post_new_question(request):
             else:
                 body = {
                     'msg':'添加question的时候出现序列化错误',
+                    'error':result_serializer.errors,
                 }
                 return Response(body, status=status.HTTP_400_BAD_REQUEST)
         else:
