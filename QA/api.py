@@ -1,15 +1,16 @@
-from .serializers import LoginSerializer,RegisterSerializer,UserProfileSerializer,QuestionSerializer, AnswerSerializer,ChannelSerializer,AddQuestionSerializer,ChannelRestulSerializer
+from .serializers import LoginSerializer,RegisterSerializer,UserProfileSerializer,QuestionSerializer, AnswerSerializer,ChannelSerializer,AddQuestionSerializer,ChannelRestulSerializer, SearchSerializer
 from django.contrib.auth import authenticate
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view,authentication_classes
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
-from .models import UserProfile,Question,Answer,Channel
+from .models import UserProfile,Question,Answer,Channel,Tag
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.core.paginator import Paginator,EmptyPage
+from django.db.models import Max
 
 # 登录
 @api_view(['POST'])
@@ -218,12 +219,23 @@ def post_new_question(request):
             title = serializers.initial_data['title']
             info = serializers.initial_data['info']
             channel_name = serializers.initial_data['channel_name']
+            # 处理tags
+            tags = serializers.initial_data['tags']
+            new_tags = tags.split(' ')
+            # 创建tag对象
+            tag_ob = []
+            for item in new_tags:
+                tag = Tag.objects.create(name = item)
+                tag_ob.append(tag)
+
             # 根据channel_name查询channel对象
             channel = Channel.objects.get(name=channel_name)
             # 发起请求的UserProfile
             userprofile = request.user.UserProfile
             # 创建question对象
             question = Question.objects.create(title=title, info=info, channel=channel, publisher=userprofile)
+            question.tags = tag_ob
+            question.save()
             # 返回所创建的question对象
             item = {
                 'code':2,
@@ -247,5 +259,63 @@ def post_new_question(request):
                 return Response(body, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+
+# search接口
+@api_view(['GET'])
+@authentication_classes((TokenAuthentication,))
+def search(request,search_text,page_num):
+    if request.auth :
+        # 获取数据
+        print ('search_text is ',search_text)
+        # 查询所有符合标准的question
+        questions = Question.objects.filter(title__icontains=search_text)
+        all_answer = []
+        if questions.count()>0:
+            for question in questions:
+                if question.answers.count() > 0:
+                    all_answer_list = list(sorted(question.answers.all(),key=lambda x:x.vote_count,reverse=True))
+                    max_vote_count_answer = all_answer_list[0]
+                    all_answer.append(max_vote_count_answer)
+
+            # 判断有没有回答数据,对查询集进行编码，返回200 OK
+            if len(all_answer) > 0:
+                # 构造分页器，处理分页
+                page_robot = Paginator(all_answer,2)
+                # 判断页码是否有效
+                try:
+                    page_data = page_robot.page(page_num)
+                except EmptyPage:
+                    body = {
+                        'msg':'EmptyPage',
+                    }
+                    return Response(body, status=status.HTTP_404_NOT_FOUND)
+
+                # 判断还有没有下一页
+                if page_data.has_next():
+                    has_next = 1
+                else:
+                    has_next = 0
+
+                answerserializer = AnswerSerializer(page_data, many=True)
+                body = {
+                    'has_next':has_next,
+                    'data':answerserializer.data,
+                }
+                return Response(body,status=status.HTTP_200_OK)
+            else:
+                body = {
+                    'code':1,
+                    'msg':'没有找到合适的回答',
+                }
+                return Response(body, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            body = {
+                'code':2,
+                'msg':'没有找到相关的问题',
+            }
+            return Response(body, status=status.HTTP_400_BAD_REQUEST)
     else:
         return Response(status=status.HTTP_403_FORBIDDEN)

@@ -43,6 +43,7 @@ class AddQuestionSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=300,min_length=10)
     info = serializers.CharField(max_length=1000,min_length=10)
     channel_name = serializers.CharField(max_length=100,min_length=2)
+    tags = serializers.CharField(max_length=100)
 
 # question & answer
 class ChannelRestulSerializer(serializers.Serializer):
@@ -50,3 +51,7 @@ class ChannelRestulSerializer(serializers.Serializer):
     answer = serializers.DictField(required=False)
     question = serializers.DictField(required=False)
     q_id = serializers.IntegerField()
+
+# search
+class SearchSerializer(serializers.Serializer):
+    search_text = serializers.CharField(max_length=100)

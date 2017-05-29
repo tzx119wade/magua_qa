@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="css/semantic.css" media="screen" title="no title">
+    <link rel="stylesheet" href="css/detail.css" media="screen" title="no title">
+    <title>问题详情页</title>
+  </head>
+  <body>
+    <!--菜单开始-->
+    <div id="global-nav">
+      <div class="ui inverted fixed compact borderless menu">
+        <div href="#" class="item">
+          <div class="ui image">
+            <img src="images/logo.png" alt="" />
+          </div>
+        </div>
+        <div href="#" class="item">
+          <div class="ui icon input">
+            <input type="text" placeholder="搜索你感兴趣的内容...">
+            <i class="search icon"></i>
+          </div>
+        </div>
+        <a class="item">
+          <img src="images/question_icon.png" alt="" class="ui icon"/>
+          <span>提问</span>
+        </a>
+        <a class="active item">
+          <img src="images/read_icon.png" alt="" class="ui icon"/>
+          <span>阅读</span>
+        </a>
+        <a class="item">
+          <img src="images/answer_icon.png" alt="" class="ui icon"/>
+          <span>回答</span>
+        </a>
+        <div class="right menu">
+          <div class="item">
+            <img class="ui mini rounded icon"src="images/avatar_hou.png" alt="" />
+            <span>侯爵</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--菜单结束-->
+    <!--问题开始-->
+    <div class="question">
+      <div class="tag-label">
+        <div class="ui circular label">程序员</div>
+        <div class="ui circular label">编程</div>
+        <div class="ui circular label">Linux</div>
+      </div>
+      <div class="ui header">
+        <h3>维护一个大型开源项目是怎样的体验?</h3>
+        <div class="sub header">
+          <div class="sub header">
+            <p>（我认为）大型开源项目包含以下任意一个或多个热证:</p>
+            <ul>
+              <li>GitHub star 数量10000</li>
+              <li>每周都可以接收到多个issues或PR</li>
+              <li>有一些公司或其他项目在生产环境中使用</li>
+              <li>任意一个或多个包管理系统中下载量巨大</li>
+              <li>在项目所在领域中拥有较大关注度</li>
+            </ul>
+            <p>可以从以下几个方面进行回答。</p>
+            <ul>
+              <li>先介绍下你的项目，用来干什么的？</li>
+              <li>在开发和维护的过程中遇到过哪些值得一提的事？</li>
+              <li>有没有什么奇葩的issue或者PR?</li>
+              <li>对你的生活或者工作有没有造成影响（好的，坏的）？</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div id="divider">
+        <div class="ui divider"></div>
+        <div class="ui header number">18个回答</div>
+        <div class="ui divider"></div>
+      </div>
+    </div>
+    <!--问题结束-->
+    <!--正文开始-->
+    <div class="item-answer">
+      <div class="p-answer">
+        <button class="ui icon button up" type="button" name="button">
+          <img src="./images/upvote_icon.png" alt="" />
+          <div class="number">1880</div>
+        </button>
+        <button class="ui icon button down" type="button" name="button">
+          <img src="./images/downvote_icon.png" alt="" />
+        </button>
+      </div>
+      <div class="c-answer">
+        <div class="ui text menu">
+          <div class="ui header">
+            左文,<span> iOS/Android/Cocos开发者</span>
+            <div class="sub header">
+              张涛、尤雨溪、程一楠、葛志亮、phodal等1880人赞同
+            </div>
+          </div>
+          <div class="ui image user-icon">
+            <img src="images/avatar_4.png" alt="" />
+          </div>
+        </div>
+        <div class="r-answer">
+          <p>
+            这次借着Electron 1.0 发布的机会，说说我自己维护两个大型开源项目的经历吧，分别是<a href="#">node-webkit</a> （也就是现在的NW.js）和<a href="#">Electron</a>.
+          </p>
+          <p>
+            前者是几年前自己单打独斗，在公司0资源投入的情况下从两百多star一直做到好几千star，具体数字已经忘掉了，只记得当时在C++项目排行里做到了前十，直到子机另起炉灶。而后者，则是披着GitHub的光环，有着公司热心的投入，毫无障碍一路跑到了现在的三万多star
+          </p>
+          <p>
+            （使用<a href="#">Star History</a>生成的star数统计图）
+          </p>
+          <div class="ui image">
+            <img src="./images/article_img1.png" alt="" />
+          </div>
+          <h4>一切从node-webkit开始</h4>
+          <p>
+            绝大部分人可能并不知道，node-webkit在最初发布的时候（2011年），并不是面向开发桌面应用程序，而是一个Node.js,可以创建一个Webkit窗口。神奇的一点是，你可以在这个窗口的页面里调用Node.js的模块.
+          </p>
+          <p>
+            Node.js代码：
+          </p>
+          <pre>
+            var nwebkit = require('nwebkit')
+            nwebkit.init({'url': 'index.html'}, function () {
+              nwebkit.context.runScript('')
+            })
+          </pre>
+        </div>
+        <div class="ui text menu meta-item">
+          <div class="item">
+            发布于2016-05-24
+          </div>
+          <div class="item">
+            <div class="ui image">
+              <img src="./images/comment_icon.png" alt="" />
+            </div>
+            238条评论
+          </div>
+        </div>
+        <div class="ui divider"></div>
+      </div>
+    </div>
+
+    <div class="item-answer">
+      <div class="p-answer">
+        <button class="ui icon button up" type="button" name="button">
+          <img src="./images/upvote_icon.png" alt="" />
+          <div class="number">62</div>
+        </button>
+        <button class="ui icon button down" type="button" name="button">
+          <img src="./images/downvote_icon.png" alt="" />
+        </button>
+      </div>
+      <div class="c-answer">
+        <div class="ui text menu">
+          <div class="ui header">
+            翁淼青,<span> duilib作者</span>
+            <div class="sub header">
+              杨大神、快刀武士、贺老师、葛质量、phodal等62人赞同
+            </div>
+          </div>
+          <div class="ui image user-icon">
+            <img src="images/avatar_4.png" alt="" />
+          </div>
+        </div>
+        <div class="r-answer">
+          <p>
+            厚着脸皮占个坑 <br>
+            duilib:<a href="#">GitHub - duilib/duilib</a><br>
+            目前star 900+，还不达标，不过考虑到早期开源在google code以及一些衍生项目，应该是有1000+的。
+          </p>
+          <p>
+            作用：
+            duilib是基于布局和组合理念而设计的一个windows下gui库，代码简洁高效稳定。
+          </p>
+          <p>值得一提的事： <br>
+            做duilib之前，我对界面开发也是个新手，虽然有多年的编程经验，但基本没写过界面代码。基于vikseo的开源项目大幅重构后发布了duilib第一版，怀着忐忑的心情发到csdn论坛上，居然有几个不认识的网友在帮忙宣传推广和维护，最早是踏雪流云，后来又来了tojen和daviyang等几个新朋友，大家热心的提交patch、编写demo、献言献策，本人内心受到很大的鼓舞，就正式把duilib作为一个开源项目来做。到今年8月份duilib也差不多6周年了，虽然作为一个传统的pc项目，他已经不那么酷了，但作为一个广泛应用的ui库，我个人会一直维护下去的。从长远看中小团队开发的通用ui项目已经很难和blink/webkit这类大型项目竞争了，html5+桌面开发平台会越来越流行（比如楼上的electron和nwjs），但duilib还继续会在对大小和性能有要求的客户端产品上继续占一席之地，并谋求跨平台跨终端的发展。
+          </p>
+          <p>
+            奇葩的事:<br>
+            很早以前，有个珠海的程序员给duilib做了个论坛，后来就宣称自己是duilib的开发者和管理者，被质疑就到处说他从duilib开发团队分裂，要去做一个牛逼的html5桌面开发框架。实际上，duilib一直托管在google code（早期）和github（目前）上，谁有提交一清二楚，此君没有提交权限也没有提交过一行代码甚至一个bug呢。
+          </p>
+          <p>
+            对生活的影响：<br>
+            10、11年的时候有过多次半夜调试的经历，后来基本没有了，偶尔和朋友或同事聊天，能看到对方一脸惊讶的表示，duilib原来是你写的，我在项目中用过或正在用呢，然后内心小得意一下。
+          </p>
+        </div>
+        <div class="ui text menu meta-item">
+          <div class="item">
+            发布于2016-05-24
+          </div>
+          <div class="item">
+            <div class="ui image">
+              <img src="./images/comment_icon.png" alt="" />
+            </div>
+            收起评论
+          </div>
+        </div>
+
+        <div class="ex-comment">
+          <div class="ui basic center aligned segment upangle">
+            <i class="icon up large angle" style=""></i>
+          </div>
+          <div class="ui segment" style="overflow:auto;margin-top:0;position:relative;">
+            <div class="ui comments">
+              <div class="comment">
+                <a class="avatar">
+                  <img src="./images/avatar_1.png" alt="" />
+                </a>
+                <div class="content">
+                  <a class="author">韦易笑</a>
+                  <div class="text">挺好一个库，可惜错过了界面脚本化的大潮,cef，pyqt，qt+js，electron，都可以用各种各样的动态语言进行开发，效率是比传统C++快三倍以上。</div>
+                  <div class="actions">
+                    <span class="date" style="color: grey;">5月前</span>
+                    <i class="icon reply grey"></i>
+                    <a class="reply">回复</a>
+                  </div>
+                </div>
+              </div>
+              <div class="ui divider"></div>
+              <div class="comment">
+                <a class="avatar">
+                  <img src="./images/avatar_2.png">
+                </a>
+                <div class="content">
+                  <a class="author">刘二</a>
+                  <div class="text">老实说写的不好，用着别扭的地方不少，有个叫duivision比你的强多了，也谦虚多了！</div>
+                  <div class="actions">
+                    <span class="date" style="color: grey;">5月前</span>
+                  </div>
+                </div>
+              </div>
+              <div class="ui divider"></div>
+              <div class="comment">
+                <a class="avatar">
+                  <img src="./images/avatar_2.png">
+                </a>
+                <div class="content">
+                  <a class="author">韩民政</a>
+                  <span style="color: grey;">回复</span>
+                  <a class="author">刘二</a>
+                  <div class="text">哪儿看出作者不谦虚了。</div>
+                  <div class="actions">
+                    <span class="date" style="color: grey;">5月前</span>
+                  </div>
+                </div>
+              </div>
+              <form class="ui reply form">
+                <div class="ui input" style="width:100%;">
+                  <input type="text" >
+                </div>
+                <button class="ui button" style="float: right;color:#fff;background-color:#3e78ad;margin-top:14px;">评论</button>
+                <button class="ui button" style="float: right;background-color:#ffffff;margin-top:14px;">取消</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="more-item">
+      <button class="ui button">加载更多</button>
+    </div>
+    <div class="reply-input">
+      <div class="ui text menu">
+        <div class="header item">
+          <a href="#">侯爵</a><span>,麻瓜编程创始人</span>
+        </div>
+        <div class="right menu">
+          <div class="ui image">
+            <img src="./images/avatar_hou.png" alt="" />
+          </div>
+        </div>
+      </div>
+      <div class="ui card" style="width:100%;">
+        <div class="image" style="height: 38px;">
+          <i class="icon picture grey large"></i>
+          <i class="icon code large"></i>
+        </div>
+        <div class="content" style="padding:0;">
+          <textarea style="" placeholder=" 写回答..."></textarea>
+        </div>
+      </div>
+      <button class="ui button">发布回答</button>
+    </div>
+    <!--正文结束-->
+    <!--页脚-->
+    <div class="zh-footer">
+        <div class="ui divider"></div>
+        <span class="f-left">Developed by Mugglecoding team xxx</span>
+        <span class="f-middle">
+          <a href="#" target="_blank">关于我们 .</a>
+          <a href="#" target="_blank">加入我们 .</a>
+          <a href="#" target="_blank">联系我们</a>
+        </span>
+
+        <span class="f-right">京ICP备15047012号-2 </span>
+    </div>
+
+    </body>
+</html>

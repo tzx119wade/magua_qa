@@ -9,3 +9,6 @@ def login(request):
 
 def home(request):
     return render(request, 'home.html')
+
+def search_view(request):
+    return render(request, 'search.html')

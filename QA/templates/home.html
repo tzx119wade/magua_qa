@@ -24,7 +24,7 @@
             </div>
             <div class="item">
                 <div class="ui icon input" style="width:240px;">
-                    <input type="textarea" placeholder="搜索你感兴趣的内容...">
+                    <input type="textarea" placeholder="搜索你感兴趣的内容..." v-on:keyup.enter="on_search" v-model="search_text">
                     <i class="search link icon"></i>
                 </div>
             </div>
@@ -78,21 +78,21 @@
             <!-- 渲染频道数据 -->
             <template v-for="item in channel_list">
               <!-- 选中的样式 -->
-              <div class="row" style="margin-top:13px;margin-bottom:13px;" v-if="current_channel==item.channel.name" v-on:click="change_channel($index)">
+              <div class="row" style="margin-top:13px;margin-bottom:13px;cursor:pointer;" v-if="current_channel==item.channel.name" v-on:click="change_channel($index)">
                   <div class="Rectangle-11">
                       <div class="ui image">
                           <img v-bind:src="item.channel.icon" alt="" />
                       </div>
-                      <a class="channel-item" href="#">{{ item.channel.name }}</a>
+                      <a class="channel-item">{{ item.channel.name }}</a>
                   </div>
               </div>
 
               <!-- 未选中的样式 -->
-              <div class="row" v-on:click="change_channel($index)" style="margin-top:13px;margin-bottom:13px;" v-else>
+              <div class="row" v-on:click="change_channel($index)" style="margin-top:13px;margin-bottom:13px;cursor:pointer;" v-else>
                   <div class="ui image">
                       <img v-bind:src="item.channel.icon" alt="" />
                   </div>
-                  <a class="channel-item" href="#">{{ item.channel.name }}</a>
+                  <a class="channel-item">{{ item.channel.name }}</a>
               </div>
             </template>
 
@@ -165,13 +165,13 @@
             <!-- 加载更多 active-->
             <div class="ui long button" v-on:click='load_next_page' v-if="channel_list[index].has_next">
                 <div class="header item">
-                    <a href="#">加载更多</a>
+                    <a>加载更多</a>
                 </div>
             </div>
               <!-- 加载更多 disable-->
             <div class="ui long disabled button" v-else>
                 <div class="header item">
-                    <a href="#">没有更多了...</a>
+                    <a>没有更多了...</a>
                 </div>
             </div>
 
@@ -223,7 +223,7 @@
                     </div>
                     <div class="field">
                         <label for="" style="margin-bottom:10px;margin-top: 10px;">添加话题：</label>
-                        <input type="text" name="name" value="" placeholder="话题之间空格隔开">
+                        <input type="text" name="name" value="" placeholder="话题之间空格隔开" v-model="question.tags">
                     </div>
                     <!-- 是否发布动作 -->
                     <div class="actions">
@@ -308,9 +308,12 @@
                   title : '',
                   info : '',
                   channel_name : '',
+                  tags : '',
               },
               second_error_modal : true,
               errors : '',
+              // search
+              search_text : '',
             },
             // 计算属性
             computed : {
@@ -458,6 +461,7 @@
                     title : self.question.title,
                     info : self.question.info,
                     channel_name : self.question.channel_name,
+                    tags:self.question.tags,
                   },
                   headers:Cookies.get('token')? {'Authorization': 'Token ' + Cookies.get('token')}:{},
                   success : function(resp){
@@ -480,6 +484,13 @@
                     console.log(self.errors);
                   }
                 })
+              },
+              // 键盘事件监听
+              on_search:function(){
+                // 获取输入值
+                if (this.search_text.length > 0 ) {
+                  window.location.href = 'http://127.0.0.1:8000/search/?search_text=' + this.search_text;
+                }
               },
             },
             created : function(){

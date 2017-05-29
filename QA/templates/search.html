@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>搜索页</title>
+    <link rel="stylesheet" href="{% static 'css/semantic.css' %}" media="screen" title="no title">
+    <link rel="stylesheet" href="{% static 'css/search.css' %}" media="screen" title="no title">
+    <script src="{% static 'js/jquery.js' %}"></script>
+    <script src="{% static 'js/semantic.js' %}"></script>
+    <script src="{% static 'js/vue1.js' %}"></script>
+    <script src="{% static 'js/js.cookie.js' %}"></script>
+    <script src="{% static 'js/reqwest.js' %}"></script>
+  </head>
+  {% verbatim %}
+  <body id="app">
+    <!-- 标题栏开始 -->
+        <div class="ui inverted top fixed menu borderless menu" style="background-color:#2f364a;">
+            <!-- logo部分 -->
+          <div class="header item logo"  style="padding-left:35px;cursor:pointer" v-on:click="to_home_page()">
+            <div class="ui image">
+              <img src="http://127.0.0.1:8000/static/images/logo.png" alt="" style="width:110px"/>
+            </div>
+          </div>
+            <!-- logo结束 -->
+            <!-- 搜索框开始 -->
+          <div class="item">
+              <div class="ui icon input" style="width:230px;">
+                <input class="prompt" type="text" placeholder="搜索你感兴趣的内容..." v-model="input_text" v-on:keyup.enter="input_clicked()">
+                <i class="search icon"></i>
+              </div>
+              <div class="results"></div>
+          </div>
+            <!-- 搜索框结束 -->
+            <!-- 菜单开始 -->
+          <div class="ui secondary menu">
+            <a class="item" style="width:77px;">
+              <div class="ui image">
+                <img src="http://127.0.0.1:8000/static/images/question_icon.png" alt="" />
+              </div>
+              提问
+            </a>
+
+            <a class="item" style="width:77px;">
+              <div class="ui image">
+                <img src="http://127.0.0.1:8000/static/images/read_icon.png" alt="" />
+              </div>
+              阅读
+            </a>
+            <a class="item" style="width:77px;">
+              <div class="ui image">
+                <img src="http://127.0.0.1:8000/static/images/answer_icon.png" alt="" />
+              </div>
+              回答
+            </a>
+          </div>
+            <!-- 菜单结束 -->
+            <!-- 头像&姓名开始 -->
+            <div class="right menu personal and name" style="padding-right:622px;">
+                <div class="item" style="width:130px;">
+                    <h5 class="ui inverted header">
+                        <div class="ui mini image">
+                            <img v-bind:src="userprofile.avatar" alt="">
+                        </div>
+                        <span>{{ userprofile.nickname }}</span>
+                    </h5>
+                </div>
+            </div>
+            <!-- 头像&姓名结束 -->
+        </div>
+
+    <!-- 内容部分开始 -->
+        <div class="ui basic segment" style="margin-bottom:0px;padding-bottom:0px;">
+          <div class="ui grid">
+            <div class="three wide column"></div>
+            <!-- 空格 -->
+            <div class="seven wide column">
+              <div class="on the line">
+                <span class="active item all searching-2"><strong>{{ search_text | capitalize }}</strong></span>
+                <span class="active item all searching">
+                  的搜索结果
+                </span>
+              </div>
+
+              <div class="ui divider" style="margin-bottom:0px"></div>
+
+              <!-- items -->
+              <div class="ui items" style="margin-bottom:0px; margin-top:10px;" v-if="has_search_data">
+                <template v-for="item in items">
+                  <div class="item">
+                    <div class="header" style="color:#c33825;font-size:14px;">
+                      <button class="compact ui button" style="width:38px;height:24px;padding:0 0 0 0px;">
+                        <span style="color:#7093c2">{{ item.vote_count }}</span>
+                      </button>
+                    </div>
+                    <div class="content" style="padding-left:10px;">
+                      <div class="header" style="color:#2e5e9f;font-size:14px;" v-html="item.title_html">
+                      </div>
+                      <div class="meta">
+                        <span style="font-weight:bold;color:#000000;font-size:13px">{{ item.publisher.nickname }},</span>
+                        <span style="color:#999;font-size:13px">{{ item.publisher.signature }}</span>
+                      </div>
+
+                      <div class="ui basic segment-p">
+                        <!-- content 收起 状态 -->
+                        <template v-if="item.show_all_content == false">
+                          <span style="line-height: 1.69;font-size:13px;font-stretch:normal;" v-html="item.content_html"></span>
+                          <span style="line-height: 1.69;font-size:13px;font-stretch:normal;color:#2e5e9f;font-weight:bold;cursor:pointer" v-on:click="item.show_all_content = !item.show_all_content">...显示全部</span>
+                        </template>
+                        <!-- content 展开 状态 -->
+                        <template v-if="item.show_all_content == true">
+                          <!-- 按照换行符 循环每个line -->
+                          <template v-for="line in item.content.split('\n')">
+                            <span style="line-height: 1.69;font-size:13px;font-stretch:normal;">{{ line }}</span><br>
+                          </template>
+                          <span style="line-height: 1.69;font-size:13px;font-stretch:normal;color:#2e5e9f;font-weight:bold;cursor:pointer" v-on:click="item.show_all_content = !item.show_all_content">收起</span>
+                        </template>
+
+                      </div>
+
+                      <div class="extra">
+                        <div class="ui image">
+                          <img src="http://127.0.0.1:8000/static/images/comment_icon.png">
+                        </div>
+                          <span>14条评论</span>
+                      </div>
+
+                      </div>
+                    </div>
+                    <div class="ui divider"></div>
+                </template>
+              </div>
+              <!-- load more button -->
+              <template v-if="has_search_data">
+                <div v-if="has_next_page == 1" v-on:click="get_search_data()" class="ui button" tabindex="0" style="color:#225599;width:633px;height:35px;margin-left:0px;margin-top:10px;margin-bottom:0px;background-color:#eff6fa;">
+                  <div class="visible content">加载更多</div>
+                </div>
+
+                <div v-if="has_next_page == 0" class="ui disabled button" tabindex="0" style="color:#225599;width:633px;height:35px;margin-left:0px;margin-top:10px;margin-bottom:0px;background-color:#eff6fa;">
+                  <div class="visible content">没有更多了...</div>
+                </div>
+              </template>
+
+              <div class="ui center aligned container" v-if="!has_search_data" style="padding-top:20px;">
+                <div class="ui sub header" style="color:#999;font-size:13px;">
+                  😢～没有找到相关的内容
+                </div>
+              </div>
+
+            </div>
+
+            <div class="six wide column"></div>
+
+          </div>
+        </div>
+
+        <!-- 网页footer部分开始 -->
+        <div class="ui basic segment footer">
+              <div class="ui divider" style="width:960px;height:3px;"></div>
+              <div class="ui three column grid">
+                <div class="column">
+                  <div class="footer1">Developed by Mugglecoding team 一队五组</div>
+                </div>
+                <div class="column">
+                  <div class="footer2">关于我们 . 加入我们 . 联系我们</div>
+                </div>
+                <div class="column">
+                  <div class="footer3">京ICP备15047012号-2</div>
+                </div>
+              </div>
+            </div>
+
+        <!-- 内部样式表 -->
+        <style media="screen">
+          .ui.items .ui.divider:last-child {
+          display: none;
+          }
+        </style>
+
+        <!-- vue 脚本 -->
+        <script>
+        // string format
+        String.prototype.format = function () {
+          var i = 0, args = arguments;
+          return this.replace(/{}/g, function () {
+            return typeof args[i] != 'undefined' ? args[i++] : '';
+          });
+        };
+
+       // vue 实例
+          var app = new Vue({
+            el : "#app",
+            data : {
+              items : [],
+              search_text : '',
+              input_text : '',
+              has_search_data : false,
+              has_next_page :0,
+              userprofile : {},
+              page_num : 1,
+            },
+
+            // methods
+            methods : {
+              // to_home_page
+              to_home_page : function(){
+                window.location.href = 'http://127.0.0.1:8000/home';
+              },
+              // 获取userprofile
+              get_userprofile : function(){
+                var self = this;
+                reqwest({
+                  url : 'http://127.0.0.1:8000/api/userprofile',
+                  method : 'get',
+                  type : 'json',
+                  headers:Cookies.get('token')? {'Authorization': 'Token ' + Cookies.get('token')}:{},
+                  success : function(resp){
+                    console.log('userprofile is ok !');
+                    self.userprofile = resp;
+                  },
+                  error : function(error){
+                    console.log('userprofile not work !');
+                    console.log(error);
+                  }
+                });
+              },
+              // input_clicked
+              input_clicked : function(){
+                // 初始化，数据重置
+                this.page_num = 1;
+                this.has_search_data = false;
+                this.has_next_page = 0;
+                this.items = [];
+                // 发起请求
+                this.get_search_data();
+              },
+              // 获取url中的search参数
+              get_search_keyword : function(name){
+                if(name=(new RegExp('[?&]'+encodeURIComponent(name)+'=([^&]*)')).exec(location.search))
+                return decodeURIComponent(name[1]);
+              },
+              // 获取request_url
+              get_request_url : function(){
+                if (this.input_text.length > 0) {
+                  var request_url = 'http://127.0.0.1:8000/api/search/{}/{}'.format(this.input_text,this.page_num);
+                }else{
+                  var request_url = 'http://127.0.0.1:8000/api/search/{}/{}'.format(this.search_text,this.page_num);
+                }
+                return request_url;
+              },
+              // 请求search 接口
+              get_search_data : function(){
+                // 获取地址栏中的keyword
+                var self = this;
+                var request_url = self.get_request_url();
+                // 请求接口
+                reqwest({
+                  url : request_url,
+                  method : 'get',
+                  type : 'json',
+                  headers:Cookies.get('token')? {'Authorization': 'Token ' + Cookies.get('token')}:{},
+                  success : function(resp){
+                    self.has_search_data = true;
+                    console.log('接口调用成功');
+                    // 页码数+1
+                    self.page_num += 1;
+                    self.has_next_page = resp.has_next;
+
+                    var re = new RegExp(self.search_text, 'gi');
+                    var replace_text = '<span style="color:#c33825;">{}</span>'.format(self.search_text);
+                    for (var i = 0; i < resp.data.length; i++) {
+                      var title_html = resp.data[i].belong_to.title.replace(re, replace_text);
+                      var content_html = resp.data[i].content.slice(0,140);
+                      content_html = content_html.replace(re, replace_text);
+                      // 添加新属性
+                      resp.data[i].content_html = content_html;
+                      resp.data[i].title_html = title_html;
+                      resp.data[i].show_all_content = false;
+                      self.items.push(resp.data[i]);
+                    };
+                  },
+                  error : function(error){
+                    console.log('接口请求失败');
+                    self.has_search_data = false;
+                    console.log(error);
+                  }
+                });
+                if (this.input_text.length > 0) {
+                  this.search_text = this.input_text;
+                  var re_url = '/search/?search_text={}'.format(self.input_text);
+                  window.history.pushState(null,null,re_url);
+                };
+              },
+            },
+
+            // created
+            created : function(){
+              // 获取账户信息
+              this.get_userprofile();
+              // 首先要捕获URL里的keyword
+              this.search_text = this.get_search_keyword('search_text')
+              console.log('search_text is ',this.search_text);
+              this.get_search_data();
+            }
+          })
+        </script>
+      </body>
+      {% endverbatim %}
+    </html>

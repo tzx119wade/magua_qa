@@ -23,6 +23,13 @@ class Channel(models.Model):
     def __str__(self):
         return self.name
 
+# 标签tag
+class Tag(models.Model):
+    name = models.CharField('标签名',blank=True, null=True,max_length=100,unique=True)
+
+    def __str__(self):
+        return self.name
+
 # question
 class Question(models.Model):
 
@@ -34,7 +41,8 @@ class Question(models.Model):
     # 扩展
     pv_count = models.IntegerField(blank=True,null=True)
     channel = models.ForeignKey(to=Channel,related_name='questions',verbose_name='频道',blank=True,null=True)
-
+    # tags
+    tags = models.ManyToManyField(Tag,related_name='questions')
 
     def __str__(self):
         return self.title
