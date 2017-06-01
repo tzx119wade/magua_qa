@@ -94,3 +94,20 @@
 
 # 2017.05.27 笔记
 1. 处理搜索结果页分页
+
+# 2017.06.01 笔记_投票的前台处理方式
+1. 没有人点赞的情况
+2. 有人，但是小于5人点赞的情况
+3. 有人点赞，并且点赞人数大于5人的情况
+
+# 判断arg_choose
+if arg_choose == 'like' && choose != 'like':
+  // 加进去
+  voters.push(username)
+  voters_count += 1
+
+elif choose =='like' && arg_choose != 'like':
+  // 减出来
+  // 找到voters里的nickname并删除，voter_count -= 1
+
+choose = arg_choose

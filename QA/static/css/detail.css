@@ -2,6 +2,9 @@ body {
   margin: 0;
   padding: 0;
 }
+.ui.divider:nth-last-child(2){
+  display: none;
+}
 p {
   color: black;
 }
@@ -11,7 +14,6 @@ ul {
 }
 #global-nav {
   height: 46px;
-  box-shadow: 2px 10px 5px #888888;
 }
 .ui.inverted.fixed.borderless.menu {
   background-color: #2f364a;

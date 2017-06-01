@@ -62,3 +62,34 @@ class Answer(models.Model):
 
     def __str__(self):
         return self.content[:10]
+
+# tickets
+class Ticket(models.Model):
+    VOTE_CHOICES = (
+        ('like','like'),
+        ('unlike','unlike'),
+        ('none','none'),
+    )
+    # choose
+    choose = models.CharField(max_length=10, choices=VOTE_CHOICES, blank=True, null=True)
+    # belong_to_answer
+    belong_to_answer = models.ForeignKey(to=Answer, related_name='tickets')
+    # belong_to_userprofile
+    belong_to_userprofile = models.ForeignKey(to=UserProfile, related_name='tickets')
+    # created_date
+    created_date = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.belong_to_userprofile.nickname
+# comment
+class Comment(models.Model):
+    # content
+    content = models.CharField(max_length=500,blank=True,null=True)
+    belong_to_userprofile = models.ForeignKey(to=UserProfile, related_name='comments')
+    belong_to_answer = models.ForeignKey(to=Answer, related_name='comments',blank=True, null=True)
+    created_date = models.DateTimeField(default=timezone.now)
+    # reply
+    reply_to = models.OneToOneField('self',blank=True,null=True)
+
+    def __str__(self):
+        return self.belong_to_userprofile.nickname + ':' + self.content[0:20]

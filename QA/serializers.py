@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import UserProfile,Question,Answer,Channel
+from .models import UserProfile,Question,Answer,Channel,Ticket
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=20,min_length=6)
@@ -24,6 +24,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
         fields = '__all__'
+        depth = 1
 
 # answer序列化器
 class AnswerSerializer(serializers.ModelSerializer):
@@ -55,3 +56,23 @@ class ChannelRestulSerializer(serializers.Serializer):
 # search
 class SearchSerializer(serializers.Serializer):
     search_text = serializers.CharField(max_length=100)
+
+# detail answers
+class DetailAnswerSerializer(serializers.Serializer):
+    nickname = serializers.CharField(max_length=50)
+    signature = serializers.CharField(max_length=50)
+    avatar = serializers.CharField(max_length=300)
+    voters_count = serializers.IntegerField()
+    voters = serializers.ListField(required=False)
+    content = serializers.CharField()
+    created_date = serializers.DateTimeField(format='%b-%d-%y %H:%M:%S')
+    comments_count = serializers.IntegerField()
+    answer_id = serializers.IntegerField()
+    choose = serializers.CharField(max_length=10)
+
+# ticket
+class TicketSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ticket
+        fields = '__all__'
+        depth = 1

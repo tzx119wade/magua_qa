@@ -12,9 +12,14 @@
         <script src="{% static 'js/vue1.js' %}"></script>
         <script src="{% static 'js/js.cookie.js' %}"></script>
         <script src="{% static 'js/reqwest.js' %}"></script>
+        <style media="screen">
+        [v-cloak] {
+          display: none;
+        }
+        </style>
     </head>
     {% verbatim %}
-    <body id="app">
+    <body id="app" v-cloak>
         <!--菜单部分开始-->
         <div class="ui inverted top fixed menu borderless blue menu">
             <div class="header item" style="padding-left:0px;">
@@ -115,7 +120,7 @@
                       <img v-bind:src="item.question.avatar">
                     </div>
                     <div class="content" style="display:inline-block;">
-                        <div class="header" style="font-size:15px;color:#225599;">{{ item.question.title }}</div>
+                        <a class="header" style="font-size:15px;color:#225599;cursor=pointer" v-on:click="click_question_title(item.q_id)">{{ item.question.title }}</a>
                         <div class="meta">
                             <span style="font-weight:bold;">{{ item.question.nickname }},「{{ item.question.signature }}」</span>
                             <span style="color:grey">问了一个问题</span>
@@ -134,7 +139,7 @@
                           </div>
                       </div>
                       <div class="content" style="display:inline-block;">
-                          <div class="header" style="font-size:15px;color:#225599;">{{ item.answer.question_title }}</div>
+                          <a class="header" style="font-size:15px;color:#225599;cursor=pointer;" v-on:click="click_question_title(item.q_id)">{{ item.answer.question_title }}</a>
                           <div class="meta">
                               <span style="font-weight:bold;">{{ item.answer.nickname }}</span>
                               <span style="color:grey;font-size:12px">{{ item.answer.signature }}</span>
@@ -302,7 +307,7 @@
             el : '#app',
             data : {
               channel_list : [],
-              index : 1,
+              index : 0,
               userprofile : '',
               question : {
                   title : '',
@@ -323,6 +328,12 @@
             },
             // 方法
             methods : {
+              // 点击问题标题
+              click_question_title: function(id){
+                console.log(typeof id);
+                var url = 'http://127.0.0.1:8000/detail/?id={}'.format(String(id));
+                window.location.href = url;
+              },
 
               // 点击频道的时候修改index的值，然后验证是否需要发起请求
               change_channel : function(index){

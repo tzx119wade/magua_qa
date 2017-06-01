@@ -1,16 +1,18 @@
-from .serializers import LoginSerializer,RegisterSerializer,UserProfileSerializer,QuestionSerializer, AnswerSerializer,ChannelSerializer,AddQuestionSerializer,ChannelRestulSerializer, SearchSerializer
+from .serializers import LoginSerializer,RegisterSerializer,UserProfileSerializer,QuestionSerializer, AnswerSerializer,ChannelSerializer,AddQuestionSerializer,ChannelRestulSerializer, SearchSerializer,DetailAnswerSerializer,TicketSerializer
 from django.contrib.auth import authenticate
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view,authentication_classes
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
-from .models import UserProfile,Question,Answer,Channel,Tag
+from .models import UserProfile,Question,Answer,Channel,Tag,Ticket
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.core.paginator import Paginator,EmptyPage
 from django.db.models import Max
+from django.core.exceptions import ObjectDoesNotExist
+
 
 # 登录
 @api_view(['POST'])
@@ -87,33 +89,53 @@ def userprofile(request):
 # 获取问题
 @api_view(['GET'])
 @authentication_classes((TokenAuthentication,))
-def get_question(request):
+def get_question(request,id=None):
     # 如果用户通过验证
     if request.auth:
-        userprofile = UserProfile.objects.get(belong_to=request.user)
-        queryset = Question.objects.filter(publisher=userprofile)
-        # 把查询后的结果交给序列化器进行编码，转成json格式
-        serializers = QuestionSerializer(queryset,many=True)
-        body = {
-            'count':queryset.count(),
-            'result':serializers.data,
-        }
-        return Response(body,status=status.HTTP_200_OK)
-
+        # 获取全部question
+        if id == None:
+            userprofile = UserProfile.objects.get(belong_to=request.user)
+            queryset = Question.objects.filter(publisher=userprofile)
+            # 把查询后的结果交给序列化器进行编码，转成json格式
+            serializers = QuestionSerializer(queryset,many=True)
+            body = {
+                'count':queryset.count(),
+                'result':serializers.data,
+                }
+            return Response(body,status=status.HTTP_200_OK)
+        else :
+            # 获取某一个question
+            queryset = Question.objects.get(id=id)
+            serializers = QuestionSerializer(queryset)
+            return Response(serializers.data, status=status.HTTP_200_OK)
     else:
         return Response(status=status.HTTP_403_FORBIDDEN)
 
 # 获取回答
 @api_view(['GET'])
 @authentication_classes((TokenAuthentication,))
-def get_answer(request):
+def get_answer(request,qid=None):
     # 验证用户
     if request.auth:
-        # 查询该用户下的锁哟回答
-        quseryset = Answer.objects.filter(publisher=request.user.UserProfile)
-        # 编码
-        serializers = AnswerSerializer(quseryset, many=True)
-        return Response(serializers.data, status=status.HTTP_200_OK)
+        if qid == None:
+            # 查询该用户下的所有回答
+            quseryset = Answer.objects.filter(publisher=request.user.UserProfile)
+            # 编码
+            serializers = AnswerSerializer(quseryset, many=True)
+            return Response(serializers.data, status=status.HTTP_200_OK)
+        else:
+            question = Question.objects.get(id=qid)
+            queryset = Answer.objects.filter(belong_to=question)
+            if queryset.count() > 0:
+                # 如果该问题下有回答
+                serializers = AnswerSerializer(queryset, many=True)
+                body = {
+                    'count':queryset.count(),
+                    'data':serializers.data,
+                }
+                return Response(body, status=status.HTTP_200_OK)
+            else:
+                return Response(status=status.HTTP_404_NOT_FOUND)
     else:
         return Response(status=status.HTTP_403_FORBIDDEN)
 
@@ -317,5 +339,129 @@ def search(request,search_text,page_num):
                 'msg':'没有找到相关的问题',
             }
             return Response(body, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+# detail Answer
+@api_view(['GET'])
+@authentication_classes((TokenAuthentication,))
+def detail_answers(request,qid):
+    # 1.通过qid获取question
+    # 2.获取question下的所有answers
+    # 3.验证answers.count是否大于0
+    # 4.如果大于0，循环所有answers，拼接数据
+    if request.auth:
+        question = Question.objects.get(id=qid)
+        answers = question.answers
+        if answers.count() > 0:
+            # 该question下面有answer
+            answers_data = []
+            for answer in answers.all():
+                # 查看用户有没有vote
+                choose = ''
+                try:
+                    ticket = Ticket.objects.get(belong_to_answer=answer,belong_to_userprofile=request.user.UserProfile)
+                    choose = ticket.choose
+                except ObjectDoesNotExist:
+                    choose = 'none'
+                item = {
+                    'nickname':answer.publisher.nickname,
+                    'signature':answer.publisher.signature,
+                    'avatar':answer.publisher.avatar.url,
+                    'content':answer.content,
+                    'created_date':answer.created_date,
+                    'comments_count':answer.comments.count(),
+                    'answer_id':answer.id,
+                    'choose':choose,
+                }
+                #1.先查询所有点赞的投票
+                like_tickets = answer.tickets.filter(choose='like')
+                if like_tickets.count() == 0:
+                    item['voters_count'] = 0
+                elif like_tickets.count() == 1:
+                    item['voters_count'] = 1
+                    voter_name = list(like_tickets.all())[0].belong_to_userprofile.nickname
+                    item['voters'] = [voter_name]
+                elif like_tickets.count() >1 and like_tickets.count() <= 5:
+                    item['voters_count'] = like_tickets.count()
+                    voters_name = []
+                    for ticket in list(like_tickets.all()):
+                        voters_name.append(ticket.belong_to_userprofile.nickname)
+                    item['voters'] = voters_name
+                elif like_tickets.count() > 5:
+                    item['voters_count'] = like_tickets.count()
+                    voters_name = []
+                    for ticket in list(like_tickets.all())[0:5]:
+                        voters_name.append(ticket.belong_to_userprofile.nickname)
+                    item['voters'] = voters_name
+                # 把拼接好的数据放入列表中
+                answers_data.append(item)
+
+            # 处理完成后返回结果
+            if len(answers_data) == 1:
+                serializers = DetailAnswerSerializer(data=answers_data[0])
+                if serializers.is_valid():
+                    body = {
+                        'count':1,
+                        'data':serializers.data,
+                    }
+                    return Response(body, status=status.HTTP_200_OK)
+                else:
+                    return Response(serializers.errors,status=status.HTTP_400_BAD_REQUEST)
+            elif len(answers_data) > 1 :
+                serializers = DetailAnswerSerializer(data=answers_data,many=True)
+                if serializers.is_valid():
+                    body = {
+                        'count':len(answers_data),
+                        'data' : serializers.data,
+                    }
+                    return Response(body, status=status.HTTP_200_OK)
+                else:
+                    return Response(serializers.errors,status=status.HTTP_400_BAD_REQUEST)
+        else:
+            body = {
+                'msg':'no answers yet',
+            }
+            return Response(body, status=status.HTTP_404_NOT_FOUND)
+    else:
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+
+@api_view(['POST'])
+@authentication_classes((TokenAuthentication,))
+def vote(request):
+    if request.auth:
+        answer_id = request.data['answer_id']
+        choose = request.data['choose']
+        answer = Answer.objects.get(id=answer_id)
+        userprofile = request.user.UserProfile
+        # 检查是否投过票
+        ticket_tuple = Ticket.objects.get_or_create(belong_to_userprofile=userprofile,belong_to_answer=answer,defaults={'choose':choose})
+        # 如果没有投过票
+        if ticket_tuple[1] == True:
+            serializer = TicketSerializer(ticket_tuple[0])
+            body = {
+                'answer_id':answer_id,
+                'data':serializer.data,
+            }
+            return Response(body,status=status.HTTP_200_OK)
+        # 如果投过票啦
+        elif ticket_tuple[1] == False:
+            # 是取消之前的投票
+            if ticket_tuple[0].choose == choose:
+                ticket=ticket_tuple[0]
+                ticket.choose = 'none'
+                ticket.save()
+            # 还是重新投
+            elif ticket_tuple[0].choose != choose:
+                ticket = ticket_tuple[0]
+                ticket.choose = choose
+                ticket.save()
+            serializer = TicketSerializer(ticket)
+            body = {
+                'answer_id':answer_id,
+                'data':serializer.data,
+            }
+            return Response(body, status=status.HTTP_200_OK)
     else:
         return Response(status=status.HTTP_403_FORBIDDEN)
