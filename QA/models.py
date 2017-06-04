@@ -89,7 +89,7 @@ class Comment(models.Model):
     belong_to_answer = models.ForeignKey(to=Answer, related_name='comments',blank=True, null=True)
     created_date = models.DateTimeField(default=timezone.now)
     # reply
-    reply_to = models.OneToOneField('self',blank=True,null=True)
+    reply_to = models.ForeignKey('self',blank=True,null=True,related_name='replys')
 
     def __str__(self):
         return self.belong_to_userprofile.nickname + ':' + self.content[0:20]

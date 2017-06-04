@@ -1,11 +1,12 @@
 from django.conf.urls import url
 from .views import proflie, login,home,search_view,detail_view
-from .api import login_site, register_site, userprofile,get_question,get_answer,get_channel,get_channel_answers, post_new_question,search,detail_answers,vote
+from .api import login_site, register_site, userprofile,get_question,get_answer,get_channel,get_channel_answers, post_new_question,search,detail_answers,vote,comment,post_new_comment
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 urlpatterns = [
+    # view
     url(r'^profile/',proflie,name='proflie'),
     url(r'^login/', login, name='login'),
     url(r'^home/', home, name='home'),
@@ -27,6 +28,8 @@ urlpatterns = [
     url(r'^api/addquestion',post_new_question),
     url(r'^api/search/(?P<search_text>\S+)/(?P<page_num>\d+)',search),
     url(r'^api/vote',vote),
+    url(r'^api/comment/(?P<answer_id>\d+)',comment),
+    url(r'^api/addcomment',post_new_comment),
 ]
 
 urlpatterns += staticfiles_urlpatterns()

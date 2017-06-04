@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import UserProfile,Question,Answer,Channel,Ticket
+from .models import UserProfile,Question,Answer,Channel,Ticket,Comment
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=20,min_length=6)
@@ -65,10 +65,12 @@ class DetailAnswerSerializer(serializers.Serializer):
     voters_count = serializers.IntegerField()
     voters = serializers.ListField(required=False)
     content = serializers.CharField()
-    created_date = serializers.DateTimeField(format='%b-%d-%y %H:%M:%S')
+    created_date = serializers.DateTimeField(format='%m-%d-%Y %H:%M:%S')
     comments_count = serializers.IntegerField()
     answer_id = serializers.IntegerField()
     choose = serializers.CharField(max_length=10)
+    comment_show = serializers.IntegerField()
+    comments = serializers.ListField()
 
 # ticket
 class TicketSerializer(serializers.ModelSerializer):
@@ -76,3 +78,11 @@ class TicketSerializer(serializers.ModelSerializer):
         model = Ticket
         fields = '__all__'
         depth = 1
+
+# comment
+class CommentSerializer(serializers.ModelSerializer):
+    created_date = serializers.DateTimeField(format='%m-%d-%Y %H:%M:%S')
+    class Meta:
+        model = Comment
+        fields = "__all__"
+        depth = 2

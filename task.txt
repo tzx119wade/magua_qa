@@ -111,3 +111,20 @@ elif choose =='like' && arg_choose != 'like':
   // 找到voters里的nickname并删除，voter_count -= 1
 
 choose = arg_choose
+
+
+# 评论功能的设计
+1. 点击「显示评论」的时候发送一个get请求，获取该回答下面的所有评论
+2. 成功获取后，把评论数据保存到answers对应的answer的新属性comments中
+3. 如果用户在这个时候添加新的评论，就发送一个post的请求新增一条评论
+4. post成功后，就重新调用get接口获取当前最新的评论
+5. 前台的处理上，如果comment的reply_to为空值，就只渲染这条评论；如果reply_to不为空就渲染成回复某人的样式
+
+# vue 踩坑笔记
+1. vue 有一套观察数组变动的机制，但是要让观察机制生效，必须在初始化的时候，数据对象就是一个数组对象，而不是在获取数据后在生成一个数组对象
+2. 这样观察机制才能在一开始就观察到数据的变动
+
+# 踩坑笔记
+1. vue的过滤器可以用在v-bind：v-text：这类指令上
+2. css的float属性，如果要消除floats 可以使用clear:right来消除浮动
+3. js 将元素插入到数组的指定位置的方法 array.splice(index,0,item):可以将item插入到index的位置从而改变原有array的长度

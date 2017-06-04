@@ -1,11 +1,11 @@
-from .serializers import LoginSerializer,RegisterSerializer,UserProfileSerializer,QuestionSerializer, AnswerSerializer,ChannelSerializer,AddQuestionSerializer,ChannelRestulSerializer, SearchSerializer,DetailAnswerSerializer,TicketSerializer
+from .serializers import LoginSerializer,RegisterSerializer,UserProfileSerializer,QuestionSerializer, AnswerSerializer,ChannelSerializer,AddQuestionSerializer,ChannelRestulSerializer, SearchSerializer,DetailAnswerSerializer,TicketSerializer,CommentSerializer
 from django.contrib.auth import authenticate
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view,authentication_classes
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
-from .models import UserProfile,Question,Answer,Channel,Tag,Ticket
+from .models import UserProfile,Question,Answer,Channel,Tag,Ticket,Comment
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
@@ -373,11 +373,14 @@ def detail_answers(request,qid):
                     'comments_count':answer.comments.count(),
                     'answer_id':answer.id,
                     'choose':choose,
+                    'comment_show':0,
+                    'comments':[],
                 }
                 #1.先查询所有点赞的投票
                 like_tickets = answer.tickets.filter(choose='like')
                 if like_tickets.count() == 0:
                     item['voters_count'] = 0
+                    item['voters']= []
                 elif like_tickets.count() == 1:
                     item['voters_count'] = 1
                     voter_name = list(like_tickets.all())[0].belong_to_userprofile.nickname
@@ -463,5 +466,56 @@ def vote(request):
                 'data':serializer.data,
             }
             return Response(body, status=status.HTTP_200_OK)
+    else:
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+
+# comment api
+@api_view(['GET'])
+@authentication_classes((TokenAuthentication,))
+def comment(request,answer_id):
+    if request.auth:
+        # 通过answer_id查找对应问题下的所有回答
+        answer = Answer.objects.get(id=answer_id)
+        # 如果有comment
+        if answer.comments.count() > 0:
+            answer_list = list(answer.comments.all().order_by('-created_date'))
+            serializer = CommentSerializer(answer_list,many=True)
+            body = {
+                'has_comment':1,
+                'data':serializer.data,
+            }
+            return Response(body, status=status.HTTP_200_OK)
+        else:
+            body = {
+                'has_comment':0,
+            }
+            return Response(body, status=status.HTTP_404_NOT_FOUND)
+    else:
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+
+# post new comment
+@api_view(['POST'])
+@authentication_classes((TokenAuthentication,))
+def post_new_comment(request):
+    if request.auth:
+        # 获取请求数据
+        content = request.data['comment_content']
+        answer_id = request.data['answer_id']
+        belong_to_answer = Answer.objects.get(id=answer_id)
+        belong_to_userprofile = request.user.UserProfile
+        try:
+            # 回复他人的情况
+            reply_to_id = request.data['reply_to_id']
+            reply_to = Comment.objects.get(id=reply_to_id)
+            new_comment = Comment.objects.create(content=content, belong_to_answer=belong_to_answer, belong_to_userprofile=belong_to_userprofile, reply_to=reply_to)
+        except KeyError:
+            # 不是回复他人的情况
+            new_comment = Comment.objects.create(content=content, belong_to_answer=belong_to_answer,belong_to_userprofile=belong_to_userprofile)
+       
+        # 返回response
+        serializer = CommentSerializer(new_comment)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     else:
         return Response(status=status.HTTP_403_FORBIDDEN)

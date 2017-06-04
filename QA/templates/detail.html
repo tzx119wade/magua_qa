@@ -8,8 +8,10 @@
     <script src="{% static 'js/vue1.js' %}"></script>
     <script src="{% static 'js/js.cookie.js' %}"></script>
     <script src="{% static 'js/reqwest.js' %}"></script>
-    <script src="{% static 'js/jquery.js' %}"></script>
     <script src="{% static 'js/semantic.js' %}"></script>
+    <script src="{% static 'js/moment.js' %}"></script>
+    <script src="{% static 'js/zh-cn.js' %}"></script>
+    <script src="{% static 'js/jquery.js' %}"></script>
     <title>问题详情页</title>
     <style>
     [v-cloak] {
@@ -146,135 +148,111 @@
           </div>
           <div class="ui text menu meta-item">
             <div class="item">
-              发布于{{ answer.created_date }}
+              发布于{{ answer.created_date | format_date }}
             </div>
-            <div class="item">
+            <div class="item" style="cursor:pointer;" v-on:click="comment_show_or_not(answer,$index)">
               <div class="ui image">
-                <img src="http://127.0.0.1:8000/static//images/comment_icon.png" alt="" />
+                <img src="http://127.0.0.1:8000/static/images/comment_icon.png" alt="" />
               </div>
-              共{{ answer.comments_count }}条评论
+              <!-- 当 comments_count == 0-->
+               <span v-if="answer.comments_count == 0 && answer.comment_show == false">暂无评论</span>
+               <!-- 收起状态-->
+               <span v-if="answer.comments_count > 0 && answer.comment_show == false">共{{ answer.comments_count }} 条评论</span>
+               <!-- 展开状态-->
+               <span v-if="answer.comments_count > 0 && answer.comment_show == true">{{ answer.comments_count }} 收起评论</span>
+               <!-- 添加评论-->
+               <span v-if="answer.comments_count == 0 && answer.comment_show == true">添加评论</span>
+            </div>
+          </div>
+
+          <!-- 评论区 -->
+          <div class="ex-comment" v-show="answer.comment_show == true">
+            <div class="ui basic center aligned segment upangle">
+              <i class="icon up large angle" style=""></i>
+            </div>
+            <div class="ui segment" style="overflow:auto;margin-top:0;position:relative;">
+
+              <div class="ui comments">
+                <template v-for="comment in answer.comments">
+                  <!-- no reply -->
+                  <template v-if="comment.reply_to == null">
+                    <div class="comment" @mouseover="handle_over(comment)" @mouseout="handle_out(comment)">
+                      <a class="avatar">
+                        <img alt="" v-bind:src="comment.belong_to_userprofile.avatar"/>
+                      </a>
+                      <div class="content">
+                        <a class="author">{{ comment.belong_to_userprofile.nickname }}</a>
+                        <div class="text">{{ comment.content }}</div>
+                        <div class="actions">
+                          <span class="date" style="color: grey;">{{ comment.created_date | format_date }}</span>
+                          <span class="reply_to" v-bind:style="{ display : comment.reply_button_show }">
+                            <i class="icon reply grey"></i>
+                            <a class="reply" v-on:click="handle_reply_input(comment)">回复</a>
+                          </span>
+                        </div>
+                        <!-- @reply input -->
+                        <div class="ui reply form" v-if="comment.reply_input_show">
+                          <div class="ui input" style="width:100%;">
+                            <input type="text" v-model="comment_reply_content" v-bind:placeholder="comment.belong_to_userprofile.nickname | reply">
+                          </div>
+                          <span class="ui sub header" style="float:left;color:red;" v-if="comment_reply_error">😢说点什么再发布吧</span>
+                          <button class="ui button" style="float: right;color:#fff;background-color:#3e78ad;margin-top:14px;margin-bottom:14px;" v-on:click="reply_comment(answer,comment.id,$index)">评论</button>
+                          <button class="ui button" style="float: right;background-color:#ffffff;margin-top:14px;display:inline-block;margin-bottom:14px;" v-on:click="handle_reply_input(comment)">取消</button>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+
+                  <!-- reply_to someone -->
+                  <template v-else>
+                    <div class="comment" @mouseover="handle_over(comment)" @mouseout="handle_out(comment)">
+                      <a class="avatar">
+                        <img v-bind:src="comment.belong_to_userprofile.avatar"/>
+                      </a>
+                      <div class="content">
+                        <a class="author">{{ comment.belong_to_userprofile.nickname }}</a>
+                        <span style="color: grey;">回复</span>
+                        <a class="author">{{ comment.reply_to.belong_to_userprofile.nickname }}</a>
+                        <div class="text">{{ comment.content }}</div>
+                        <div class="actions">
+                          <span class="date" style="color: grey;">{{ comment.created_date | format_date }}</span>
+                          <span class="reply_to" v-bind:style="{ display : comment.reply_button_show }">
+                            <i class="icon reply grey"></i>
+                            <a class="reply" v-on:click="handle_reply_input(comment)">回复</a>
+                          </span>
+                        </div>
+                        <!-- @reply input -->
+                        <div class="ui reply form" v-if="comment.reply_input_show">
+                          <div class="ui input" style="width:100%;">
+                            <input type="text" v-model="comment_reply_content" v-bind:placeholder="comment.belong_to_userprofile.nickname | reply">
+                          </div>
+                          <span class="ui sub header" style="float:left;color:red;" v-if="comment_reply_error">😢说点什么再发布吧</span>
+                          <button class="ui button" style="float: right;color:#fff;background-color:#3e78ad;margin-top:14px;margin-bottom:14px;" v-on:click="reply_comment(answer,comment.id,$index)">评论</button>
+                          <button class="ui button" style="float: right;background-color:#ffffff;margin-top:14px;display:inline-block;margin-bottom:14px;" v-on:click="handle_reply_input(comment)">取消</button>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+
+                  <!-- ui divider -->
+                  <div class="ui divider" v-if="$index != answer.comments.length - 1" style="clear:right;"></div>
+                </template>
+                <!-- comment input -->
+                <div class="ui reply form" style="clear:right;">
+                  <div class="ui input" style="width:100%;">
+                    <input type="text" v-model="comment_input_content">
+                  </div>
+                </div>
+                <span class="ui sub header" style="float:left;color:red;" v-if="comment_input_error">😢说点什么再发布吧</span>
+                <button class="ui button" style="float: right;color:#fff;background-color:#3e78ad;margin-top:14px;" v-on:click="add_new_comment(answer.answer_id,$index)">评论</button>
+                <button class="ui button" style="float: right;background-color:#ffffff;margin-top:14px;" v-on:click="comment_show_or_not(answer,$index)">取消</button>
+              </div>
             </div>
           </div>
           <div class="ui divider"></div>
         </div>
       </div>
 
-      <!--<div class="item-answer">
-        <div class="p-answer">
-          <button class="ui icon button up" type="button" name="button">
-            <img src="http://127.0.0.1:8000/static//images/upvote_icon.png" alt="" />
-            <div class="number">62</div>
-          </button>
-          <button class="ui icon button down" type="button" name="button">
-            <img src="http://127.0.0.1:8000/static//images/downvote_icon.png" alt="" />
-          </button>
-        </div>
-        <div class="c-answer">
-          <div class="ui text menu">
-            <div class="ui header">
-              翁淼青,<span> duilib作者</span>
-              <div class="sub header">
-                杨大神、快刀武士、贺老师、葛质量、phodal等62人赞同
-              </div>
-            </div>
-            <div class="ui image user-icon">
-              <img src="http://127.0.0.1:8000/static/images/avatar_4.png" alt="" />
-            </div>
-          </div>
-          <div class="r-answer">
-            <p>
-              厚着脸皮占个坑 <br>
-              duilib:<a href="#">GitHub - duilib/duilib</a><br>
-              目前star 900+，还不达标，不过考虑到早期开源在google code以及一些衍生项目，应该是有1000+的。
-            </p>
-            <p>
-              作用：
-              duilib是基于布局和组合理念而设计的一个windows下gui库，代码简洁高效稳定。
-            </p>
-            <p>值得一提的事： <br>
-              做duilib之前，我对界面开发也是个新手，虽然有多年的编程经验，但基本没写过界面代码。基于vikseo的开源项目大幅重构后发布了duilib第一版，怀着忐忑的心情发到csdn论坛上，居然有几个不认识的网友在帮忙宣传推广和维护，最早是踏雪流云，后来又来了tojen和daviyang等几个新朋友，大家热心的提交patch、编写demo、献言献策，本人内心受到很大的鼓舞，就正式把duilib作为一个开源项目来做。到今年8月份duilib也差不多6周年了，虽然作为一个传统的pc项目，他已经不那么酷了，但作为一个广泛应用的ui库，我个人会一直维护下去的。从长远看中小团队开发的通用ui项目已经很难和blink/webkit这类大型项目竞争了，html5+桌面开发平台会越来越流行（比如楼上的electron和nwjs），但duilib还继续会在对大小和性能有要求的客户端产品上继续占一席之地，并谋求跨平台跨终端的发展。
-            </p>
-            <p>
-              奇葩的事:<br>
-              很早以前，有个珠海的程序员给duilib做了个论坛，后来就宣称自己是duilib的开发者和管理者，被质疑就到处说他从duilib开发团队分裂，要去做一个牛逼的html5桌面开发框架。实际上，duilib一直托管在google code（早期）和github（目前）上，谁有提交一清二楚，此君没有提交权限也没有提交过一行代码甚至一个bug呢。
-            </p>
-            <p>
-              对生活的影响：<br>
-              10、11年的时候有过多次半夜调试的经历，后来基本没有了，偶尔和朋友或同事聊天，能看到对方一脸惊讶的表示，duilib原来是你写的，我在项目中用过或正在用呢，然后内心小得意一下。
-            </p>
-          </div>
-          <div class="ui text menu meta-item">
-            <div class="item">
-              发布于2016-05-24
-            </div>
-            <div class="item">
-              <div class="ui image">
-                <img src="http://127.0.0.1:8000/static//images/comment_icon.png" alt="" />
-              </div>
-              收起评论
-            </div>
-          </div>
-
-          <div class="ex-comment">
-            <div class="ui basic center aligned segment upangle">
-              <i class="icon up large angle" style=""></i>
-            </div>
-            <div class="ui segment" style="overflow:auto;margin-top:0;position:relative;">
-              <div class="ui comments">
-                <div class="comment">
-                  <a class="avatar">
-                    <img src="http://127.0.0.1:8000/static//images/avatar_1.png" alt="" />
-                  </a>
-                  <div class="content">
-                    <a class="author">韦易笑</a>
-                    <div class="text">挺好一个库，可惜错过了界面脚本化的大潮,cef，pyqt，qt+js，electron，都可以用各种各样的动态语言进行开发，效率是比传统C++快三倍以上。</div>
-                    <div class="actions">
-                      <span class="date" style="color: grey;">5月前</span>
-                      <i class="icon reply grey"></i>
-                      <a class="reply">回复</a>
-                    </div>
-                  </div>
-                </div>
-                <div class="ui divider"></div>
-                <div class="comment">
-                  <a class="avatar">
-                    <img src="http://127.0.0.1:8000/static//images/avatar_2.png">
-                  </a>
-                  <div class="content">
-                    <a class="author">刘二</a>
-                    <div class="text">老实说写的不好，用着别扭的地方不少，有个叫duivision比你的强多了，也谦虚多了！</div>
-                    <div class="actions">
-                      <span class="date" style="color: grey;">5月前</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="ui divider"></div>
-                <div class="comment">
-                  <a class="avatar">
-                    <img src="http://127.0.0.1:8000/static//images/avatar_2.png">
-                  </a>
-                  <div class="content">
-                    <a class="author">韩民政</a>
-                    <span style="color: grey;">回复</span>
-                    <a class="author">刘二</a>
-                    <div class="text">哪儿看出作者不谦虚了。</div>
-                    <div class="actions">
-                      <span class="date" style="color: grey;">5月前</span>
-                    </div>
-                  </div>
-                </div>
-                <form class="ui reply form">
-                  <div class="ui input" style="width:100%;">
-                    <input type="text" >
-                  </div>
-                  <button class="ui button" style="float: right;color:#fff;background-color:#3e78ad;margin-top:14px;">评论</button>
-                  <button class="ui button" style="float: right;background-color:#ffffff;margin-top:14px;">取消</button>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>-->
     </template>
 
     <!-- reply 控件 -->
@@ -322,6 +300,17 @@
         return typeof args[i] != 'undefined' ? args[i++] : '';
       });
     };
+    // 时间格式化过滤器
+    Vue.filter('format_date',function(value){
+      moment.locale('zh-cn');
+      var date = moment(value, "MM-DD-YYYY HH:mm:ss").fromNow();
+      return date;
+    });
+    // @回复某人过滤器
+    Vue.filter('reply', function(value){
+      return '@ '+value;
+    });
+
 
       var app = new Vue({
         el : '#app',
@@ -330,8 +319,26 @@
           userprofile : {},
           has_answers : false,
           answers : [],
+          comment_input_error : false,
+          comment_input_content :'',
+          comment_reply_content : '',
+          comment_reply_error : false,
         },
         methods : {
+          // @回复input 显示或隐藏
+          handle_reply_input : function(item){
+            item.reply_input_show = !item.reply_input_show;
+            this.comment_reply_error = false;
+            this.comment_reply_content = '';
+          },
+          // handle_over
+          handle_over : function(item){
+            item.reply_button_show = 'inline';
+          },
+          // handle_out
+          handle_out : function(item){
+            item.reply_button_show = 'none';
+          },
           get_userprofile : function(){
             var self = this;
             reqwest({
@@ -439,6 +446,108 @@
                 console.log('request vote api wrong !');
               }
             });
+          },
+          // comment_show_or_not
+          comment_show_or_not : function(item,index){
+            // 评论数不为0的时候才需要展开并请求接口
+            item.comment_show =!item.comment_show;
+            this.comment_input_error = false;
+            this.comment_input_content = '';
+            if (item.comments_count > 0) {
+              if (item.comment_show == true) {
+                // 添加loading样式
+                var answer_id = item.answer_id;
+                this.request_comment_api(answer_id, index);
+              }
+            }
+          },
+          // request comment api
+          request_comment_api : function(answer_id,answer_index){
+              var url = 'http://127.0.0.1:8000/api/comment/{}'.format(String(answer_id))
+              var self = this;
+              reqwest({
+                url : url,
+                method : 'get',
+                type : 'json',
+                headers:Cookies.get('token')? {'Authorization': 'Token ' + Cookies.get('token')}:{},
+                success : function(resp){
+                  console.log('request comment is ok');
+                  for (var i = 0; i < resp.data.length; i++) {
+                    resp.data[i].reply_button_show = 'none';
+                    resp.data[i].reply_input_show = false;
+                  }
+                  // 保存数据
+                  self.answers[answer_index].comments = resp.data;
+                  self.answers[answer_index].comments_count = resp.data.length;
+                },
+                error : function(error){
+                  console.log('request comment wrong!');
+                }
+              });
+          },
+          // add new comment
+          add_new_comment : function(answer_id,index){
+            // 首先判断输入是否有效
+            if (this.comment_input_content.length > 0) {
+              // 输入有效 发起请求
+              var self = this;
+              reqwest({
+                url : 'http://127.0.0.1:8000/api/addcomment',
+                method : 'post',
+                type : 'json',
+                headers:Cookies.get('token')? {'Authorization': 'Token ' + Cookies.get('token')}:{},
+                data : {
+                  answer_id:answer_id,
+                  comment_content : self.comment_input_content,
+                },
+                success : function(resp){
+                  console.log('add new comment is ok');
+                  self.answers[index].comments.push(resp);
+                  self.answers[index].comments_count += 1;
+                  // 初始化
+                  self.comment_input_content = ''
+                  self.comment_input_error = false;
+                },
+                error : function(){
+                  console.log('add new comment wrong!');
+                }
+              });
+            }else{
+              // 如果输入无效
+              this.comment_input_error = true;
+            }
+          },
+          // reply comment
+          reply_comment : function(answer_item,comment_id,index){
+            // 首先判断输入是否有效
+            console.log('方法运行了');
+            if (this.comment_reply_content.length > 0) {
+              console.log('请求中');
+              // 发起请求
+              var self = this;
+              reqwest({
+                url : 'http://127.0.0.1:8000/api/addcomment',
+                method : 'post',
+                type : 'json',
+                data : {
+                  comment_content : self.comment_reply_content,
+                  answer_id : answer_item.answer_id,
+                  reply_to_id : comment_id,
+                },
+                headers:Cookies.get('token')? {'Authorization': 'Token ' + Cookies.get('token')}:{},
+                success : function(resp){
+                  console.log('reply comment is ok');
+                  answer_item.comments.splice(index,0,resp);
+                  self.comment_reply_content = '';
+                  self.comment_reply_error = false;
+                },
+                error : function(){
+                  console.log('reply comment is wrong !');
+                }
+              });
+            }else{
+              this.comment_reply_error = true;
+            }
           },
 
         },
